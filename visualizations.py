@@ -1,9 +1,7 @@
 import plotly.express as px
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
 import streamlit as st
+import pandas as pd
 
 
 def plot_top_districts(data, top_n=10):
@@ -64,7 +62,7 @@ def plot_distribution(data, crime_types):
 def plot_correlation_heatmap(data, crime_types):
     """Plot correlation heatmap of crime types"""
     if len(crime_types) < 2:
-        st.warning("Need at least 2 crime types for correlation analysis")
+        st.warning("Need at least 2 crime types for correlation")
         return None
     
     corr_matrix = data[crime_types].corr()
@@ -109,5 +107,10 @@ def plot_crime_hotspots(data, crime_types):
     fig = px.treemap(
         district_crimes,
         path=['State', 'District'],
-        values
-
+        values='Total_Crimes',
+        title='Crime Hotspots: Geographic Distribution',
+        color='Total_Crimes',
+        color_continuous_scale='Reds'
+    )
+    fig.update_layout(height=600)
+    return fig
