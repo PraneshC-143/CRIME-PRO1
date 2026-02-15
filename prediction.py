@@ -458,39 +458,104 @@ def display_model_metrics(results):
         results: Dictionary with model results
     
     Returns:
-        Styled DataFrame
+        Styled DataFrame or None if error occurs
     """
-    if not results or 'metrics' not in results:
+    try:
+        # Validate input
+        if not results or 'metrics' not in results:
+            st.warning("No metrics available to display.")
+            return None
+        
+        if not results['metrics']:
+            st.warning("Metrics dictionary is empty.")
+            return None
+        
+        # Create metrics dataframe
+        metrics_data = []
+        for model_name, metrics in results['metrics'].items():
+            try:
+                metrics_data.append({
+                    'Model': model_name,
+                    'MAE': f"{metrics['MAE']:.2f}",
+                    'RMSE': f"{metrics['RMSE']:.2f}",
+                    'R² Score': f"{metrics['R²']:.4f}"
+                })
+            except (KeyError, TypeError, ValueError) as e:
+                st.warning(f"Error processing metrics for {model_name}: {str(e)}")
+                continue
+        
+        if not metrics_data:
+            st.warning("No valid metrics data to display.")
+            return None
+        
+        df = pd.DataFrame(metrics_data)
+        
+        # Validate required columns exist
+        required_columns = ['MAE', 'RMSE', 'R² Score']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            st.error(f"Missing required columns: {missing_columns}")
+            return None
+        
+        # Convert numeric columns for styling with error handling
+        df_numeric = df.copy()
+        
+        # Clean and convert each numeric column
+        for col in required_columns:
+            try:
+                # Strip whitespace and convert to numeric
+                # Use errors='coerce' to handle conversion issues gracefully
+                if df_numeric[col].dtype == 'object':
+                    # Clean string values: strip whitespace and special characters
+                    df_numeric[col] = df_numeric[col].astype(str).str.strip()
+                
+                df_numeric[col] = pd.to_numeric(df_numeric[col], errors='coerce')
+                
+                # Check if conversion resulted in NaN values
+                if df_numeric[col].isna().any():
+                    st.warning(f"Some values in '{col}' could not be converted to numeric. Using original values.")
+                    # Fall back to original values if conversion fails
+                    df_numeric[col] = pd.to_numeric(df[col], errors='coerce')
+                    
+            except Exception as e:
+                st.error(f"Error converting column '{col}' to numeric: {str(e)}")
+                return None
+        
+        # Verify we have valid numeric data
+        if df_numeric[required_columns].isna().all().any():
+            st.error("Could not convert metrics to numeric format for display.")
+            return None
+        
+        # Style: Lower MAE/RMSE is better (green), Higher R² is better (green)
+        def highlight_best(s):
+            try:
+                if s.name == 'MAE' or s.name == 'RMSE':
+                    # Filter out NaN values for comparison
+                    valid_values = s.dropna()
+                    if len(valid_values) == 0:
+                        return ['' for _ in s]
+                    is_min = s == valid_values.min()
+                    return ['background-color: lightgreen' if v else '' for v in is_min]
+                elif s.name == 'R² Score':
+                    # Filter out NaN values for comparison
+                    valid_values = s.dropna()
+                    if len(valid_values) == 0:
+                        return ['' for _ in s]
+                    is_max = s == valid_values.max()
+                    return ['background-color: lightgreen' if v else '' for v in is_max]
+                return ['' for _ in s]
+            except Exception:
+                return ['' for _ in s]
+        
+        # Apply styling with error handling
+        try:
+            styled_df = df_numeric.style.apply(highlight_best, subset=required_columns)
+            return styled_df
+        except Exception as e:
+            st.warning(f"Could not apply styling to metrics table: {str(e)}")
+            # Return unstyled dataframe as fallback
+            return df_numeric
+            
+    except Exception as e:
+        st.error(f"Unexpected error in display_model_metrics: {str(e)}")
         return None
-    
-    # Create metrics dataframe
-    metrics_data = []
-    for model_name, metrics in results['metrics'].items():
-        metrics_data.append({
-            'Model': model_name,
-            'MAE': f"{metrics['MAE']:.2f}",
-            'RMSE': f"{metrics['RMSE']:.2f}",
-            'R² Score': f"{metrics['R²']:.4f}"
-        })
-    
-    df = pd.DataFrame(metrics_data)
-    
-    # Convert numeric columns for styling
-    df_numeric = df.copy()
-    df_numeric['MAE'] = pd.to_numeric(df_numeric['MAE'])
-    df_numeric['RMSE'] = pd.to_numeric(df_numeric['RMSE'])
-    df_numeric['R² Score'] = pd.to_numeric(df_numeric['R² Score'])
-    
-    # Style: Lower MAE/RMSE is better (green), Higher R² is better (green)
-    def highlight_best(s):
-        if s.name == 'MAE' or s.name == 'RMSE':
-            is_min = s == s.min()
-            return ['background-color: lightgreen' if v else '' for v in is_min]
-        elif s.name == 'R² Score':
-            is_max = s == s.max()
-            return ['background-color: lightgreen' if v else '' for v in is_max]
-        return ['' for _ in s]
-    
-    styled_df = df_numeric.style.apply(highlight_best, subset=['MAE', 'RMSE', 'R² Score'])
-    
-    return styled_df
