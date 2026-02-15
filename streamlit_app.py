@@ -6,13 +6,7 @@ Main Streamlit Application
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import numpy as np
-import os
 from datetime import datetime
 
 # Import custom modules
@@ -22,7 +16,7 @@ from visualizations import (
     plot_top_districts, plot_crime_trend, plot_distribution,
     plot_correlation_heatmap, plot_heatmap_by_district, plot_crime_hotspots
 )
-from analytics import predict_crime_trend, get_crime_statistics, get_crime_by_type
+from analytics import get_crime_statistics
 from utils import (
     apply_custom_styling, format_number, get_download_button,
     display_kpi_card, display_warning_message, display_info_message
@@ -119,8 +113,7 @@ col1, col2 = st.columns([3, 1])
 with col1:
     st.markdown(f"""
     **State:** `{state}` | **District:** `{district}` | **Years:** `{year_range[0]} – {year_range[1]}`
-    """
-    )
+    """)
 with col2:
     get_download_button(filtered_df, filename=f"crime_analysis_{state}")
 
@@ -146,210 +139,133 @@ with col3:
 with col4:
     display_kpi_card("Std Dev", stats['std_deviation'], "📉")
 
+
+# ==================================================
+# VISUALIZATIONS
+# ==================================================
 st.divider()
+st.subheader("📊 Crime Analytics")
 
-
-# ==================================================
-# MAIN CONTENT TABS
-# ==================================================
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "📊 Overview",
-    "📈 Distribution",
-    "🔗 Relationships",
-    "🗺️ Hotspots",
-    "🤖 Prediction",
-    "📋 Data"
+# Tabs for different visualizations
+tab1, tab2, tab3, tab4 = st.tabs([
+    "🏙️ District Analysis",
+    "📈 Trends",
+    "🔥 Heatmaps",
+    "🌍 Geographic"
 ])
 
-
-# ==================================================
-# TAB 1: OVERVIEW
-# ==================================================
 with tab1:
-    st.subheader("Crime Overview & Trends")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        fig = plot_top_districts(filtered_df)
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        fig = plot_crime_trend(filtered_df)
-        st.plotly_chart(fig, use_container_width=True)
-    
-    # Crime by type
-    st.subheader("🚨 Crimes by Type (Top 10)")
-    crime_by_type = get_crime_by_type(filtered_df, crime_types)
-    
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        crime_df = pd.DataFrame({
-            'Crime Type': crime_by_type.index[:10],
-            'Count': crime_by_type.values[:10]
-        })
-        
-        fig_plot = px.bar(
-            crime_df,
-            x='Crime Type',
-            y='Count',
-            color='Count',
-            color_continuous_scale='Blues'
-        )
-        st.plotly_chart(fig_plot, use_container_width=True)
-    
-    with col2:
-        st.metric("Most Common Crime", crime_by_type.index[0])
-        st.metric("Count", format_number(crime_by_type.values[0]))
-
-
-# ==================================================
-# TAB 2: DISTRIBUTION
-# ==================================================
-with tab2:
-    st.subheader("Crime Distribution Analysis")
-    
-    fig = plot_distribution(filtered_df)
-    st.pyplot(fig)
-    
-    st.divider()
-    
-    # Additional statistics
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("Mean", format_number(filtered_df['crime_sum'].mean()))
-    with col2:
-        st.metric("Median", format_number(filtered_df['crime_sum'].median()))
-    with col3:
-        st.metric("Max", format_number(filtered_df['crime_sum'].max()))
-
-
-# ==================================================
-# TAB 3: RELATIONSHIPS
-# ==================================================
-with tab3:
-    st.subheader("Crime Type Correlations")
-    
-    fig = plot_correlation_heatmap(df, crime_types)
-    st.pyplot(fig)
-    
-    display_info_message(
-        "Shows Spearman correlation between different crime types. "
-        "Values closer to 1 indicate strong positive correlation."
-    )
-    
-    st.divider()
-    
-    st.subheader("Crime Intensity Heatmap")
-    fig = plot_heatmap_by_district(filtered_df, crime_types)
-    st.pyplot(fig)
-
-
-# ==================================================
-# TAB 4: HOTSPOTS
-# ==================================================
-with tab4:
-    st.subheader("Geographic Crime Hotspots")
-    
-    fig = plot_crime_hotspots(filtered_df)
+    st.markdown("### Top Districts by Crime Count")
+    fig = plot_top_districts(filtered_df, top_n=10)
     st.plotly_chart(fig, use_container_width=True)
     
-    display_info_message(
-        "Hotspots represent aggregated crime intensity at the state level. "
-        "Red areas indicate higher crime concentration."
-    )
+    st.markdown("### Crime Type Distribution")
+    fig = plot_distribution(filtered_df, crime_types)
+    st.plotly_chart(fig, use_container_width=True)
 
+with tab2:
+    st.markdown("### Crime Trend Over Years")
+    fig = plot_crime_trend(filtered_df, crime_types)
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Yearly comparison table
+    st.markdown("### Yearly Statistics")
+    yearly_stats = filtered_df.groupby('year')[crime_types].sum()
+    yearly_stats['Total'] = yearly_stats.sum(axis=1)
+    st.dataframe(yearly_stats.style.highlight_max(axis=0, color='#ffcccc'))
 
-# ==================================================
-# TAB 5: PREDICTION
-# ==================================================
-with tab5:
-    st.subheader("🤖 Crime Trend Prediction")
-    
-    prediction_result = predict_crime_trend(filtered_df, years_ahead=5)
-    
-    if prediction_result:
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.metric("Model R² Score", f"{prediction_result['r2_score']:.3f}")
-        with col2:
-            st.metric("RMSE", f"{prediction_result['rmse']:.0f}")
-        with col3:
-            st.metric("MAE", f"{prediction_result['mae']:.0f}")
-        
-        st.divider()
-        
-        # Combine historical and predicted data
-        historical = prediction_result['historical_data'].copy()
-        historical['type'] = 'Historical'
-        
-        future_df = pd.DataFrame({
-            'year': prediction_result['future_years'],
-            'crime_sum': prediction_result['future_predictions'],
-            'type': 'Predicted'
-        })
-        
-        combined = pd.concat([historical, future_df], ignore_index=True)
-        
-        fig = px.line(
-            combined,
-            x='year',
-            y='crime_sum',
-            color='type',
-            markers=True,
-            title='Historical vs Predicted Crime Trends',
-            labels={'crime_sum': 'Total Crimes', 'year': 'Year'}
-        )
-        
-        fig.update_traces(line=dict(width=3))
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Display predictions table
-        st.subheader("📊 Predicted Values (Next 5 Years)")
-        pred_table = pd.DataFrame({
-            'Year': prediction_result['future_years'],
-            'Predicted Crimes': [int(x) for x in prediction_result['future_predictions']]
-        })
-        st.dataframe(pred_table, use_container_width=True)
-    
+with tab3:
+    st.markdown("### Crime Type Correlation")
+    if len(crime_types) >= 2:
+        fig = plot_correlation_heatmap(filtered_df, crime_types)
+        if fig:
+            st.plotly_chart(fig, use_container_width=True)
     else:
-        display_warning_message(
-            "Insufficient data for prediction. Need at least 5 years of historical data."
-        )
+        display_info_message("Select at least 2 crime types to view correlation")
+    
+    st.markdown("### District-wise Crime Heatmap")
+    fig = plot_heatmap_by_district(filtered_df, crime_types)
+    st.plotly_chart(fig, use_container_width=True)
+
+with tab4:
+    st.markdown("### Geographic Crime Distribution")
+    fig = plot_crime_hotspots(filtered_df, crime_types)
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Top districts table
+    st.markdown("### Top 10 Districts Summary")
+    top_districts_data = filtered_df.groupby('district_name')[crime_types].sum()
+    top_districts_data['Total'] = top_districts_data.sum(axis=1)
+    top_districts_data = top_districts_data.sort_values('Total', ascending=False).head(10)
+    st.dataframe(top_districts_data.style.background_gradient(cmap='Reds'))
 
 
 # ==================================================
-# TAB 6: DATA
+# DETAILED DATA EXPLORER
 # ==================================================
-with tab6:
-    st.subheader("📋 Filtered Crime Data")
+st.divider()
+st.subheader("🔍 Detailed Data Explorer")
+
+with st.expander("📋 View Raw Data", expanded=False):
+    st.dataframe(
+        filtered_df[['state_name', 'district_name', 'year'] + crime_types],
+        use_container_width=True,
+        height=400
+    )
     
-    # Display data statistics
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total Records", len(filtered_df))
-    with col2:
-        st.metric("States", filtered_df['state_name'].nunique())
-    with col3:
-        st.metric("Districts", filtered_df['district_name'].nunique())
+    st.markdown(f"**Total Records:** {len(filtered_df)}")
+
+
+# ==================================================
+# INSIGHTS & RECOMMENDATIONS
+# ==================================================
+st.divider()
+st.subheader("💡 Key Insights")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("### 🔍 Observations")
     
-    st.divider()
+    # Calculate insights
+    top_district = filtered_df.groupby('district_name')['crime_sum'].sum().idxmax()
+    top_district_crimes = int(filtered_df.groupby('district_name')['crime_sum'].sum().max())
     
-    # Data table
-    st.dataframe(filtered_df, use_container_width=True, height=400)
+    most_common_crime = filtered_df[crime_types].sum().idxmax()
+    most_common_crime_count = int(filtered_df[crime_types].sum().max())
     
-    # Download button
-    st.divider()
-    get_download_button(filtered_df, filename=f"crime_data_{state}_{district}")
+    st.markdown(f"""
+    - **Highest Crime District:** `{top_district}` with **{format_number(top_district_crimes)}** crimes
+    - **Most Common Crime Type:** `{most_common_crime}` with **{format_number(most_common_crime_count)}** cases
+    - **Analysis Period:** {year_range[1] - year_range[0] + 1} years
+    - **Districts Analyzed:** {filtered_df['district_name'].nunique()}
+    """)
+
+with col2:
+    st.markdown("### 📊 Statistics Summary")
+    
+    yearly_change = filtered_df.groupby('year')['crime_sum'].sum()
+    if len(yearly_change) > 1:
+        trend = "📈 Increasing" if yearly_change.iloc[-1] > yearly_change.iloc[0] else "📉 Decreasing"
+        change_pct = ((yearly_change.iloc[-1] - yearly_change.iloc[0]) / yearly_change.iloc[0] * 100)
+        
+        st.markdown(f"""
+        - **Overall Trend:** {trend}
+        - **Change Rate:** {change_pct:.1f}%
+        - **Peak Year:** {stats['peak_year']}
+        - **Average Annual Crimes:** {format_number(stats['avg_crimes_per_year'])}
+        """)
+    else:
+        st.info("Select multiple years to see trend analysis")
 
 
 # ==================================================
 # FOOTER
 # ==================================================
 st.divider()
-st.caption(
-    "**CrimeScope** | Interactive IPC Crime Intelligence Dashboard v2.0 | "
-    "Designed for policy analysis and academic evaluation"
-)
+st.markdown("""
+<div style='text-align: center; color: #666; padding: 20px;'>
+    <p><strong>CrimeScope</strong> - IPC Crime Intelligence Dashboard</p>
+    <p>Data Source: District-wise IPC Crimes | Last Updated: 2024</p>
+</div>
+""", unsafe_allow_html=True)
