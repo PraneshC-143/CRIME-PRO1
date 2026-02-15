@@ -461,18 +461,27 @@ def display_model_metrics(results):
         Styled DataFrame
     """
     if not results or 'metrics' not in results:
+        st.warning("No metrics available to display.")
         return None
     
     try:
         # Create metrics dataframe with NUMERIC values
         metrics_data = []
         for model_name, metrics in results['metrics'].items():
-            metrics_data.append({
-                'Model': model_name,
-                'MAE': metrics['MAE'],           # Keep as numeric
-                'RMSE': metrics['RMSE'],         # Keep as numeric
-                'R² Score': metrics['R²']        # Keep as numeric
-            })
+            try:
+                metrics_data.append({
+                    'Model': model_name,
+                    'MAE': metrics['MAE'],           # Keep as numeric
+                    'RMSE': metrics['RMSE'],         # Keep as numeric
+                    'R² Score': metrics['R²']        # Keep as numeric
+                })
+            except (KeyError, TypeError) as e:
+                st.warning(f"Error processing metrics for {model_name}: {str(e)}")
+                continue
+        
+        if not metrics_data:
+            st.warning("No valid metrics data to display.")
+            return None
         
         df = pd.DataFrame(metrics_data)
         
