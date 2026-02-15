@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 
+
 def predict_crime_trend(data, target):
     """Predict crime trends using Random Forest"""
     X = data.drop(target, axis=1)
@@ -12,21 +13,18 @@ def predict_crime_trend(data, target):
     model.fit(X_train, y_train)
     return model.predict(X_test)
 
+
 def get_crime_statistics(data):
     """Calculate crime statistics from filtered data"""
-    # Get numeric columns (crime types)
     numeric_cols = data.select_dtypes(include=[np.number]).columns.tolist()
     
-    # Remove non-crime columns
     exclude_cols = ['year']
     crime_cols = [col for col in numeric_cols if col not in exclude_cols]
     
-    # Calculate statistics
     total_crimes = int(data[crime_cols].sum().sum())
     
-    # Group by year for temporal analysis
     yearly_crimes = data.groupby('year')[crime_cols].sum().sum(axis=1)
-    peak_year = int(yearly_crimes.idxmax()) if len(yearly_crimes) > 0 else data['year'].max()
+    peak_year = int(yearly_crimes.idxmax()) if len(yearly_crimes) > 0 else int(data['year'].max())
     avg_crimes_per_year = int(yearly_crimes.mean()) if len(yearly_crimes) > 0 else 0
     std_deviation = int(yearly_crimes.std()) if len(yearly_crimes) > 0 else 0
     
@@ -38,8 +36,9 @@ def get_crime_statistics(data):
         'crime_columns': crime_cols
     }
 
+
 def get_crime_by_type(data, crime_type):
     """Filter data by specific crime type"""
     if crime_type in data.columns:
-        return data[['state_name', 'district_name', 'year', crime
-
+        return data[['state_name', 'district_name', 'year', crime_type]]
+    return data
