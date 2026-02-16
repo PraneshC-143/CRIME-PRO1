@@ -23,6 +23,10 @@ from utils.kpi_calculator import (
 )
 from utils import format_number, apply_custom_styling
 
+# Constants
+MAX_STATE_NAME_LENGTH = 15
+MAX_CRIME_NAME_LENGTH = 20
+
 
 # ==================================================
 # PAGE CONFIG
@@ -104,17 +108,20 @@ with col2:
     )
 
 with col3:
+    state_name = most_affected_kpi['state']
+    truncated_state = state_name[:MAX_STATE_NAME_LENGTH] + "..." if len(state_name) > MAX_STATE_NAME_LENGTH else state_name
     st.metric(
         label="Most Affected State",
-        value=most_affected_kpi['state'][:15] + "..." if len(most_affected_kpi['state']) > 15 else most_affected_kpi['state'],
+        value=truncated_state,
         delta=format_number(most_affected_kpi['crimes']) + " crimes"
     )
 
 with col4:
-    crime_name = highest_crime_kpi['category'][:20] + "..." if len(highest_crime_kpi['category']) > 20 else highest_crime_kpi['category']
+    crime_category = highest_crime_kpi['category']
+    truncated_crime = crime_category[:MAX_CRIME_NAME_LENGTH] + "..." if len(crime_category) > MAX_CRIME_NAME_LENGTH else crime_category
     st.metric(
         label="Highest Crime Type",
-        value=crime_name,
+        value=truncated_crime,
         delta=format_number(highest_crime_kpi['count']) + " cases"
     )
 
