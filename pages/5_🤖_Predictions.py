@@ -188,13 +188,20 @@ if results:
             🟢 *Green highlight indicates best performing model*
             """)
             
-            # Best model
-            best_model = min(results['metrics'].items(), key=lambda x: x[1]['rmse'])
-            st.success(f"""
-            **🏆 Best Model:** {best_model[0]}
-            - RMSE: {best_model[1]['rmse']:,.2f}
-            - R² Score: {best_model[1]['r2']:.4f}
-            """)
+            # Best model - handle different metric key names
+            try:
+                # Try 'rmse' first (lowercase), then 'RMSE' (uppercase)
+                best_model = min(results['metrics'].items(), key=lambda x: x[1].get('rmse', x[1].get('RMSE', float('inf'))))
+            except (KeyError, TypeError, ValueError):
+                # Fallback: just take the first model
+                best_model = list(results['metrics'].items())[0] if results['metrics'] else (None, {'rmse': 0, 'RMSE': 0, 'r2': 0, 'R²': 0})
+            
+            if best_model[0]:
+                st.success(f"""
+                **🏆 Best Model:** {best_model[0]}
+                - RMSE: {best_model[1].get('rmse', best_model[1].get('RMSE', 'N/A'))}
+                - R² Score: {best_model[1].get('r2', best_model[1].get('R²', 'N/A'))}
+                """)
         
         # Model details
         st.divider()
