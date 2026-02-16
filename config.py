@@ -12,6 +12,13 @@ DATA_FILE = "districtwise-ipc-crimes.xlsx"
 SHEET_NAME = "districtwise-ipc-crimes"
 COLUMNS_TO_DROP = ["id", "state_code", "district_code"]
 
+# Historical Data Configuration
+HISTORICAL_DATA_ENABLED = True
+HISTORICAL_DATA_FILE = "historical-crime-data-complete.csv"
+CRIME_DATASET_REPO = "https://raw.githubusercontent.com/avinashladdha/CrimeDataset/master"
+MIN_YEAR = 1969
+MAX_YEAR = 2023
+
 # UI Configuration
 PRIMARY_COLOR = "#1f77b4"
 BACKGROUND_COLOR = "#fafafa"
