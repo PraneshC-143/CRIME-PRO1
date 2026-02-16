@@ -458,27 +458,22 @@ def display_model_metrics(results):
         results: Dictionary with model results
     
     Returns:
-        Styled DataFrame or None if error occurs
+        Styled DataFrame
     """
+    if not results or 'metrics' not in results:
+        st.warning("No metrics available to display.")
+        return None
+    
     try:
-        # Validate input
-        if not results or 'metrics' not in results:
-            st.warning("No metrics available to display.")
-            return None
-        
-        if not results['metrics']:
-            st.warning("Metrics dictionary is empty.")
-            return None
-        
-        # Create metrics dataframe
+        # Create metrics dataframe with NUMERIC values
         metrics_data = []
         for model_name, metrics in results['metrics'].items():
             try:
                 metrics_data.append({
                     'Model': model_name,
-                    'MAE': f"{metrics['MAE']:.2f}",
-                    'RMSE': f"{metrics['RMSE']:.2f}",
-                    'R² Score': f"{metrics['R²']:.4f}"
+                    'MAE': metrics['MAE'],           # Keep as numeric
+                    'RMSE': metrics['RMSE'],         # Keep as numeric
+                    'R² Score': metrics['R²']        # Keep as numeric
                 })
             except (KeyError, TypeError, ValueError) as e:
                 st.warning(f"Error processing metrics for {model_name}: {str(e)}")
@@ -490,83 +485,33 @@ def display_model_metrics(results):
         
         df = pd.DataFrame(metrics_data)
         
-        # Validate required columns exist
-        required_columns = ['MAE', 'RMSE', 'R² Score']
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        if missing_columns:
-            st.error(f"Missing required columns: {missing_columns}")
-            return None
-        
-        # Convert numeric columns for styling with error handling
-        df_numeric = df.copy()
-        
-        # Clean and convert each numeric column
-        for col in required_columns:
-            try:
-                # Strip whitespace from string values and convert to numeric
-                # Use errors='coerce' to handle conversion issues gracefully
-                df_numeric[col] = df_numeric[col].str.strip()
-                df_numeric[col] = pd.to_numeric(df_numeric[col], errors='coerce')
-                
-                # Check if conversion resulted in NaN values
-                nan_count = df_numeric[col].isna().sum()
-                if nan_count > 0:
-                    st.warning(f"{nan_count} value(s) in '{col}' could not be converted to numeric.")
-                    
-            except AttributeError:
-                # If str.strip() fails, values might not be strings
-                # Try direct conversion
-                try:
-                    df_numeric[col] = pd.to_numeric(df_numeric[col], errors='coerce')
-                except Exception as e:
-                    st.error(f"Error converting column '{col}' to numeric: {str(e)}")
-                    return None
-            except Exception as e:
-                st.error(f"Error converting column '{col}' to numeric: {str(e)}")
-                return None
-        
-        # Verify we have valid numeric data
-        # Check if all values in any column are NaN or if more than half are NaN
-        for col in required_columns:
-            col_len = len(df_numeric[col])
-            if df_numeric[col].isna().all():
-                st.error(f"Could not convert any values in '{col}' to numeric format.")
-                return None
-            nan_ratio = df_numeric[col].isna().sum() / col_len
-            if nan_ratio > 0.5:
-                st.error(f"More than 50% of values in '{col}' could not be converted to numeric format.")
-                return None
-        
         # Style: Lower MAE/RMSE is better (green), Higher R² is better (green)
         def highlight_best(s):
-            try:
-                if s.name == 'MAE' or s.name == 'RMSE':
-                    # Filter out NaN values for comparison
-                    valid_values = s.dropna()
-                    if len(valid_values) == 0:
-                        return ['' for _ in s]
-                    is_min = s == valid_values.min()
-                    return ['background-color: lightgreen' if v else '' for v in is_min]
-                elif s.name == 'R² Score':
-                    # Filter out NaN values for comparison
-                    valid_values = s.dropna()
-                    if len(valid_values) == 0:
-                        return ['' for _ in s]
-                    is_max = s == valid_values.max()
-                    return ['background-color: lightgreen' if v else '' for v in is_max]
-                return ['' for _ in s]
-            except Exception:
-                return ['' for _ in s]
+            if s.name == 'MAE' or s.name == 'RMSE':
+                valid_values = s.dropna()
+                if len(valid_values) == 0:
+                    return ['' for _ in s]
+                is_min = s == valid_values.min()
+                return ['background-color: lightgreen' if v else '' for v in is_min]
+            elif s.name == 'R² Score':
+                valid_values = s.dropna()
+                if len(valid_values) == 0:
+                    return ['' for _ in s]
+                is_max = s == valid_values.max()
+                return ['background-color: lightgreen' if v else '' for v in is_max]
+            return ['' for _ in s]
         
-        # Apply styling with error handling
-        try:
-            styled_df = df_numeric.style.apply(highlight_best, subset=required_columns)
-            return styled_df
-        except Exception as e:
-            st.warning(f"Could not apply styling to metrics table: {str(e)}")
-            # Return unstyled dataframe as fallback
-            return df_numeric
-            
+        # Apply styling and formatting
+        styled_df = df.style\
+            .apply(highlight_best, subset=['MAE', 'RMSE', 'R² Score'])\
+            .format({
+                'MAE': '{:.2f}',
+                'RMSE': '{:.2f}',
+                'R² Score': '{:.4f}'
+            })
+        
+        return styled_df
+        
     except Exception as e:
-        st.error(f"Unexpected error in display_model_metrics: {str(e)}")
+        st.error(f"Error displaying metrics: {str(e)}")
         return None
