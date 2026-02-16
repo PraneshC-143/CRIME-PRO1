@@ -2,6 +2,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd
+from utils import format_crime_name
 
 
 def plot_top_districts(data, top_n=10):
@@ -35,7 +36,7 @@ def plot_crime_trend(data, crime_types):
             x=yearly_data.index,
             y=yearly_data[crime],
             mode='lines+markers',
-            name=crime
+            name=format_crime_name(crime)
         ))
     
     fig.update_layout(
@@ -52,9 +53,12 @@ def plot_distribution(data, crime_types):
     """Plot distribution of crime types"""
     crime_totals = data[crime_types].sum().sort_values(ascending=False)
     
+    # Format crime names for display
+    formatted_names = [format_crime_name(name) for name in crime_totals.index]
+    
     fig = px.pie(
         values=crime_totals.values,
-        names=crime_totals.index,
+        names=formatted_names,
         title='Distribution of Crime Types',
         hole=0.4
     )
@@ -70,6 +74,11 @@ def plot_correlation_heatmap(data, crime_types):
         return None
     
     corr_matrix = data[crime_types].corr()
+    
+    # Format crime names for display
+    formatted_names = [format_crime_name(name) for name in crime_types]
+    corr_matrix.index = formatted_names
+    corr_matrix.columns = formatted_names
     
     fig = px.imshow(
         corr_matrix,
@@ -90,6 +99,10 @@ def plot_heatmap_by_district(data, crime_types):
     district_data = data[data['district_name'].isin(top_districts)]
     
     heatmap_data = district_data.groupby('district_name')[crime_types].sum()
+    
+    # Format crime names for display
+    formatted_names = [format_crime_name(name) for name in crime_types]
+    heatmap_data.columns = formatted_names
     
     fig = px.imshow(
         heatmap_data.T,
