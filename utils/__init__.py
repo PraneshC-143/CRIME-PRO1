@@ -31,6 +31,7 @@ display_warning_message = _root_utils_module.display_warning_message
 display_info_message = _root_utils_module.display_info_message
 display_success_message = _root_utils_module.display_success_message
 display_error_message = _root_utils_module.display_error_message
+format_crime_name = _root_utils_module.format_crime_name
 
 from .kpi_calculator import (
     calculate_total_crimes,
@@ -72,6 +73,7 @@ __all__ = [
     'display_info_message',
     'display_success_message',
     'display_error_message',
+    'format_crime_name',
     
     # KPI functions
     'calculate_total_crimes',

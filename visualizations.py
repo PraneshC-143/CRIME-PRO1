@@ -95,8 +95,16 @@ def plot_correlation_heatmap(data, crime_types):
 
 def plot_heatmap_by_district(data, crime_types):
     """Plot heatmap of crimes by district"""
-    top_districts = data.groupby('district_name')['crime_sum'].sum().nlargest(15).index
-    district_data = data[data['district_name'].isin(top_districts)]
+    if data.empty or not crime_types:
+        return None
+    
+    # Calculate total crimes per district
+    district_data = data.copy()
+    
+    # Sum up all selected crime types for each district
+    district_data['crime_sum'] = district_data[crime_types].sum(axis=1)
+    top_districts = district_data.groupby('district_name')['crime_sum'].sum().nlargest(15).index
+    district_data = district_data[district_data['district_name'].isin(top_districts)]
     
     heatmap_data = district_data.groupby('district_name')[crime_types].sum()
     
