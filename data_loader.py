@@ -32,6 +32,7 @@ def load_data():
         return None, None
 
 
+
 def load_current_data():
     """
     Load current crime data from Excel file (2017-2023)
@@ -48,6 +49,16 @@ def load_current_data():
         
         # Read Excel file
         df = pd.read_excel(path, sheet_name="districtwise-ipc-crimes")
+
+        # Load Projected Data for 2023 if available
+        projected_path = os.path.join(os.path.dirname(__file__), "data", "raw", "projected_2023.csv")
+        if os.path.exists(projected_path):
+            try:
+                df_projected = pd.read_csv(projected_path)
+                df = pd.concat([df, df_projected], ignore_index=True)
+                # st.toast("📊 Includes Projected Data for 2023", icon="ℹ️")
+            except Exception as e:
+                print(f"Error loading projected data: {e}")
         
         # Drop unnecessary columns
         cols_to_drop = ["id", "state_code", "district_code"]
