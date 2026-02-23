@@ -977,6 +977,16 @@
             return s;
         }
 
+        // Synthetic population baseline per state (for "rate index")
+        const STATE_POP = {};
+        (function initPop() {
+            const rng = mulberry32(42);
+            Object.keys(STATE_DISTRICTS).forEach((s, i) => {
+                // 10M - 220M
+                STATE_POP[s] = Math.round((10 + rng() * 210) * 1e6);
+            });
+        })();
+
         // Will be populated dynamically by Python Backend API
         let DATA = [];
 
@@ -1082,8 +1092,8 @@
             const f = state.filters;
             let rows = DATA.slice();
 
-            // years
-            rows = rows.filter(r => r.Year >= f.yearFrom && r.Year <= f.yearTo);
+            // years (ensure parsed as int for safety from JSON payload)
+            rows = rows.filter(r => parseInt(r.Year) >= parseInt(f.yearFrom) && parseInt(r.Year) <= parseInt(f.yearTo));
 
             // state/district
             if (f.state !== "__all__") rows = rows.filter(r => r.State === f.state);
@@ -1138,12 +1148,12 @@
         function yoyForSelection(rows, crimeType) {
             // YoY uses last year in range vs previous year, if available
             const f = state.filters;
-            const y2 = f.yearTo;
+            const y2 = parseInt(f.yearTo);
             const y1 = y2 - 1;
-            if (y1 < f.yearFrom) return { pct: NaN, delta: 0, a: 0, b: 0, y1, y2 };
+            if (y1 < parseInt(f.yearFrom)) return { pct: NaN, delta: 0, a: 0, b: 0, y1, y2 };
 
-            const a = sumTotal(rows.filter(r => r.Year === y1), crimeType);
-            const b = sumTotal(rows.filter(r => r.Year === y2), crimeType);
+            const a = sumTotal(rows.filter(r => parseInt(r.Year) === y1), crimeType);
+            const b = sumTotal(rows.filter(r => parseInt(r.Year) === y2), crimeType);
             const pct = a === 0 ? NaN : ((b - a) / a) * 100;
             return { pct, delta: b - a, a, b, y1, y2 };
         }
@@ -2067,7 +2077,31 @@ Notes:
             // Sorting
             bindAll("thead th[data-sort]", "click", (e) => {
                 const th = e.currentTarget;
-                const key = th.getAttribute("data-sort");
+                // Reset table sorting header indicators
+                $$("thead th span.muted2").forEach(el => el.textContent = "");
+                const activeTh = $(`thead th[data-sort="${state.sort.key}"] span.muted2`);
+                if (activeTh) activeTh.textContent = state.sort.dir === "asc" ? " ▲" : " ▼";
+
+                // If a prediction update exists, it handles the Prediction KPI async
+                // YoY calculations based on the live data (Filtered by the user state)
+                const activeData = applyCurrentFilters(); // Get the currently filtered data
+                const currentYear = state.filters.yearTo;
+                const prevYear = currentYear - 1;
+
+                // Calculate YoY for filtered data
+                const cyData = activeData.filter(r => r.Year === currentYear);
+                const pyData = activeData.filter(r => r.Year === prevYear);
+
+                const cyTotal = sumTotal(cyData, state.filters.crimeType);
+                const pyTotal = sumTotal(pyData, state.filters.crimeType);
+
+                if (pyTotal > 0 && cyTotal !== pyTotal && pyTotal !== 0) {
+                    const yoyPct = ((cyTotal - pyTotal) / pyTotal) * 100;
+                    const heroYoy = $("#kpiTotalYoy");
+                    if (heroYoy) heroYoy.textContent = formatPct(yoyPct);
+                } else if ($("#kpiTotalYoy")) {
+                    $("#kpiTotalYoy").textContent = "—";
+                }
                 if (state.sort.key === key) {
                     state.sort.dir = state.sort.dir === "asc" ? "desc" : "asc";
                 } else {
