@@ -47,6 +47,21 @@ const ApiClient = {
             console.error(error);
             return null;
         }
+    },
+
+    /**
+     * Fetch the entire preprocessed dataset 
+     * Powers the interactive HTML UI (map, tables, and distribution charts)
+     */
+    async getDataset() {
+        try {
+            const response = await fetch(`${API_URL}/dataset`);
+            if (!response.ok) throw new Error('API Error fetching dataset');
+            return await response.json();
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
     }
 };
 

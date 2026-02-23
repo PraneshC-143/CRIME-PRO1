@@ -38,7 +38,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <!-- API Client -->
+    <!-- API Client to communicate with Python Data Backend -->
     <script src="js/api_client.js"></script>
 
     <style>
@@ -865,116 +865,421 @@
     </div>
 
 
-        <!-- Connected Python API Logic -->
     <script>
+        // -----------------------------
+        // Demo dataset (replace with CSV/JSON loader)
+        // Schema resembles: State, District, Year, plus IPC headers
+        // -----------------------------
+        const YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028];
+        const PROJECTED_YEARS = [2024, 2025, 2026, 2027, 2028];
+
+        const CRIME_TYPES = [
+            "Murder",
+            "Rape",
+            "Kidnapping",
+            "Robbery",
+            "Theft",
+            "Burglary",
+            "Riots",
+            "Cyber Crime",
+            "Domestic Violence"
+        ];
+
+        // Approximate centroids for select Indian states (for map bubbles)
+        const STATE_CENTROIDS = {
+            "Uttar Pradesh": [26.8467, 80.9462],
+            "Bihar": [25.0961, 85.3131],
+            "West Bengal": [22.9868, 87.8550],
+            "Madhya Pradesh": [22.9734, 78.6569],
+            "Rajasthan": [27.0238, 74.2179],
+            "Tamil Nadu": [11.1271, 78.6569],
+            "Karnataka": [15.3173, 75.7139],
+            "Gujarat": [22.2587, 71.1924],
+            "Andhra Pradesh": [15.9129, 79.7400],
+            "Telangana": [18.1124, 79.0193],
+            "Odisha": [20.9517, 85.0985],
+            "Kerala": [10.8505, 76.2711],
+            "Punjab": [31.1471, 75.3412],
+            "Haryana": [29.0588, 76.0856],
+            "Delhi": [28.7041, 77.1025],
+            "Assam": [26.2006, 92.9376],
+            "Jharkhand": [23.6102, 85.2799],
+            "Chhattisgarh": [21.2787, 81.8661],
+            "Uttarakhand": [30.0668, 79.0193],
+            "Himachal Pradesh": [31.1048, 77.1734],
+            "Jammu & Kashmir": [34.0837, 74.7973],
+            "Goa": [15.2993, 74.1240]
+        };
+
+        const STATE_DISTRICTS = {
+            "Uttar Pradesh": ["Lucknow", "Kanpur Nagar", "Varanasi", "Agra", "Ghaziabad"],
+            "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Thane"],
+            "Bihar": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga"],
+            "West Bengal": ["Kolkata", "Howrah", "North 24 Parganas", "Siliguri", "Asansol"],
+            "Madhya Pradesh": ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain"],
+            "Rajasthan": ["Jaipur", "Jodhpur", "Kota", "Udaipur", "Ajmer"],
+            "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Salem", "Tiruchirappalli"],
+            "Karnataka": ["Bengaluru", "Mysuru", "Mangaluru", "Hubballi", "Belagavi"],
+            "Gujarat": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar"],
+            "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool"],
+            "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar", "Khammam"],
+            "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur", "Puri"],
+            "Kerala": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kannur"],
+            "Punjab": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala", "Bathinda"],
+            "Haryana": ["Gurugram", "Faridabad", "Panipat", "Ambala", "Hisar"],
+            "Delhi": ["New Delhi", "Central Delhi", "South Delhi", "East Delhi", "North Delhi"],
+            "Assam": ["Guwahati", "Dibrugarh", "Silchar", "Jorhat", "Tezpur"],
+            "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Hazaribagh"],
+            "Chhattisgarh": ["Raipur", "Bilaspur", "Durg", "Korba", "Jagdalpur"],
+            "Uttarakhand": ["Dehradun", "Haridwar", "Nainital", "Haldwani", "Roorkee"],
+            "Himachal Pradesh": ["Shimla", "Mandi", "Dharamshala", "Solan", "Kullu"],
+            "Jammu & Kashmir": ["Srinagar", "Jammu", "Anantnag", "Baramulla", "Pulwama"],
+            "Goa": ["Panaji", "Margao", "Vasco da Gama", "Mapusa", "Ponda"]
+        };
+
+        // Precise coordinates for demo districts found in STATE_DISTRICTS
+        const DISTRICT_COORDINATES = {
+            // Tamil Nadu
+            "Chennai": [13.0827, 80.2707], "Coimbatore": [11.0168, 76.9558], "Madurai": [9.9252, 78.1198], "Salem": [11.6643, 78.1460], "Tiruchirappalli": [10.7905, 78.7047],
+            // Uttar Pradesh
+            "Lucknow": [26.8467, 80.9462], "Kanpur Nagar": [26.4499, 80.3319], "Varanasi": [25.3176, 82.9739], "Agra": [27.1767, 78.0081], "Ghaziabad": [28.6692, 77.4538],
+            // Maharashtra
+            "Mumbai": [19.0760, 72.8777], "Pune": [18.5204, 73.8567], "Nagpur": [21.1458, 79.0882], "Nashik": [19.9975, 73.7898], "Thane": [19.2183, 72.9781],
+            // Bihar
+            "Patna": [25.5941, 85.1376], "Gaya": [24.7914, 85.0002], "Bhagalpur": [25.2425, 87.0143], "Muzaffarpur": [26.1197, 85.3910], "Darbhanga": [26.1542, 85.8918],
+            // West Bengal
+            "Kolkata": [22.5726, 88.3639], "Howrah": [22.5958, 88.2636], "North 24 Parganas": [22.6168, 88.4029], "Siliguri": [26.7271, 88.3953], "Asansol": [23.6889, 86.9661],
+            // Karnataka
+            "Bengaluru": [12.9716, 77.5946], "Mysuru": [12.2958, 76.6394], "Mangaluru": [12.9141, 74.8560], "Hubballi": [15.3647, 75.1240], "Belagavi": [15.8497, 74.4977],
+            // Kerala
+            "Thiruvananthapuram": [8.5241, 76.9366], "Kochi": [9.9312, 76.2673], "Kozhikode": [11.2588, 75.7804], "Thrissur": [10.5276, 76.2144], "Kannur": [11.8745, 75.3704],
+            // Delhi
+            "New Delhi": [28.6139, 77.2090], "Central Delhi": [28.6453, 77.2456], "South Delhi": [28.4817, 77.1873], "East Delhi": [28.6279, 77.2925], "North Delhi": [28.7183, 77.1645],
+            // Gujarat
+            "Ahmedabad": [23.0225, 72.5714], "Surat": [21.1702, 72.8311], "Vadodara": [22.3072, 73.1812], "Rajkot": [22.3039, 70.8022], "Bhavnagar": [21.7645, 72.1519]
+            // Add more as needed for demo completeness... these cover major requested areas
+        };
+
+        function mulberry32(seed) {
+            return function () {
+                let t = seed += 0x6D2B79F5;
+                t = Math.imul(t ^ t >>> 15, t | 1);
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            }
+        }
+
+        function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+        function formatInt(n) { return (n ?? 0).toLocaleString('en-IN'); }
+        function formatPct(n) {
+            if (!isFinite(n)) return "—";
+            const s = (n >= 0 ? "+" : "") + n.toFixed(1) + "%";
+            return s;
+        }
+
+        // Will be populated dynamically by Python Backend API
+        let DATA = [];
+
+        // -----------------------------
+        // State
+        // -----------------------------
         const state = {
-            filters: { state: '__all__', district: '__all__', yearFrom: 2017, yearTo: 2023 }
+            filters: {
+                state: "__all__",
+                district: "__all__",
+                crimeType: "__all__",
+                yearFrom: YEARS[0],
+                yearTo: YEARS[YEARS.length - 1]
+            },
+            topMode: "state", // or "district"
+            sort: { key: "Total", dir: "desc" },
+            page: 1,
+            pageSize: 18,
+            tableSearch: ""
         };
 
-        const DOM = {
-            heroTotalCrimes: document.getElementById('heroTotalCrimes'),
-            heroTopState: document.getElementById('heroTopState'),
-            heroYoyArrow: document.getElementById('heroYoyArrow'),
-            heroYoyValue: document.getElementById('heroYoyValue'),
-            heroDominant: document.getElementById('heroDominant'),
-            stateSelect: document.getElementById('stateSelect'),
-            yearFromSelect: document.getElementById('yearFromSelect'),
-            yearToSelect: document.getElementById('yearToSelect'),
-            applyFiltersBtn: document.getElementById('applyFiltersBtn'),
-            kpiPrediction: document.getElementById('kpiPrediction'),
-            predictModel: document.getElementById('predictModel'),
-            predictTargetYear: document.getElementById('predictTargetYear'),
-            kpiTopState: document.getElementById('kpiTopState'),
-            kpiTotal: document.getElementById('kpiTotal')
-        };
+        // -----------------------------
+        // DOM helpers
+        // -----------------------------
+        const $ = (sel, root = document) => root.querySelector(sel);
+        const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+        const setTxt = (sel, txt) => { const el = $(sel); if (el) el.textContent = txt; };
 
-        const formatNumber = num => new Intl.NumberFormat('en-IN').format(num || 0);
+        // -----------------------------
+        // Populate selects
+        // -----------------------------
+        function initFilters() {
+            const stateSelect = $("#stateSelect");
+            const districtSelect = $("#districtSelect");
+            const crimeTypeSelect = $("#crimeTypeSelect");
+            const yFrom = $("#yearFromSelect");
+            const yTo = $("#yearToSelect");
 
-        async function initApp() {
-            setYearFilters();
-            await refreshData();
-            
-            if(DOM.applyFiltersBtn) {
-                DOM.applyFiltersBtn.addEventListener('click', () => {
-                    state.filters.state = DOM.stateSelect.value;
-                    state.filters.yearFrom = parseInt(DOM.yearFromSelect.value);
-                    state.filters.yearTo = parseInt(DOM.yearToSelect.value);
-                    refreshData();
-                    
-                    if (window.innerWidth < 1024 && document.getElementById('filtersPanel')) {
-                        document.getElementById('filtersPanel').classList.remove('fixed', 'inset-y-0', 'left-0');
-                        if (document.getElementById('overlay')) document.getElementById('overlay').classList.remove('show');
-                    }
-                });
+            // states
+            const states = Array.from(new Set(DATA.map(d => d.State))).sort();
+            for (const s of states) {
+                const opt = document.createElement("option");
+                opt.value = s; opt.textContent = s;
+                stateSelect.appendChild(opt);
             }
+
+            // crime types
+            for (const ct of CRIME_TYPES) {
+                const opt = document.createElement("option");
+                opt.value = ct; opt.textContent = ct;
+                crimeTypeSelect.appendChild(opt);
+            }
+
+            // years
+            for (const y of YEARS) {
+                const o1 = document.createElement("option");
+                o1.value = y; o1.textContent = y;
+                yFrom.appendChild(o1);
+
+                const o2 = document.createElement("option");
+                o2.value = y; o2.textContent = y;
+                yTo.appendChild(o2);
+            }
+
+            // defaults
+            yFrom.value = state.filters.yearFrom;
+            yTo.value = state.filters.yearTo;
+
+            // district based on state
+            function refreshDistricts() {
+                const s = stateSelect.value;
+                districtSelect.innerHTML = "";
+                const all = document.createElement("option");
+                all.value = "__all__"; all.textContent = "All districts";
+                districtSelect.appendChild(all);
+                const districts = (s === "__all__")
+                    ? Array.from(new Set(DATA.map(d => d.District))).sort()
+                    : Array.from(new Set(DATA.filter(r => r.State === s).map(r => r.District))).sort();
+                for (const d of districts) {
+                    const opt = document.createElement("option");
+                    opt.value = d; opt.textContent = d;
+                    districtSelect.appendChild(opt);
+                }
+                // keep if possible
+                if ([...districtSelect.options].some(o => o.value === state.filters.district)) {
+                    districtSelect.value = state.filters.district;
+                } else {
+                    districtSelect.value = "__all__";
+                    state.filters.district = "__all__";
+                }
+            }
+
+            stateSelect.addEventListener("change", () => {
+                refreshDistricts();
+            });
+            refreshDistricts();
         }
 
-        async function refreshData() {
-            let s = state.filters.state;
-            if(s === '__all__') s = 'all';
-            
-            try {
-                const stats = await window.ApiClient.getStats(s, state.filters.yearFrom, state.filters.yearTo);
-                const trend = await window.ApiClient.getTrend(s);
-                const prediction = await window.ApiClient.getPrediction(s, state.filters.yearTo + 1);
+        // -----------------------------
+        // Filtering & aggregation
+        // -----------------------------
+        function applyCurrentFilters() {
+            const f = state.filters;
+            let rows = DATA.slice();
 
-                if(stats && DOM.heroTotalCrimes) {
-                    DOM.heroTotalCrimes.textContent = formatNumber(stats.total_crimes);
-                    DOM.heroTopState.textContent = stats.top_state;
-                    DOM.heroDominant.textContent = stats.dominant_crime;
-                    DOM.heroYoyValue.textContent = Math.abs(stats.yoy_growth).toFixed(1) + "%";
-                    DOM.heroYoyArrow.innerHTML = stats.yoy_growth >= 0 ? '▴' : '▾';
-                    DOM.heroYoyArrow.className = `h-9 w-9 rounded-xl flex items-center justify-center bg-${stats.yoy_growth >= 0 ? 'red' : 'emerald'}-500/15 border border-${stats.yoy_growth >= 0 ? 'red' : 'emerald'}-500/30 text-${stats.yoy_growth >= 0 ? 'red' : 'emerald'}-400 text-lg`;
-                    
-                    if(DOM.kpiTopState) DOM.kpiTopState.textContent = stats.top_state;
-                    if(DOM.kpiTotal) DOM.kpiTotal.textContent = formatNumber(stats.total_crimes);
-                }
-                
-                if(prediction && DOM.kpiPrediction) {
-                    DOM.kpiPrediction.textContent = formatNumber(prediction.predicted_crimes);
-                    DOM.predictModel.textContent = prediction.model_used;
-                    DOM.predictTargetYear.textContent = prediction.target_year;
-                }
-                
-                if(trend) {
-                   updateCharts(trend);
-                }
-            } catch (e) {
-                console.error("API Error:", e);
-            }
+            // years
+            rows = rows.filter(r => r.Year >= f.yearFrom && r.Year <= f.yearTo);
+
+            // state/district
+            if (f.state !== "__all__") rows = rows.filter(r => r.State === f.state);
+            if (f.district !== "__all__") rows = rows.filter(r => r.District === f.district);
+
+            return rows;
         }
-        
-        function updateCharts(trendData) {
-            const ctxLine = document.getElementById('lineChart');
-            if(!ctxLine) return;
-            
-            let chartStatus = Chart.getChart("lineChart");
-            if (chartStatus != undefined) {
-              chartStatus.destroy();
+
+        function totalForRow(row, crimeType) {
+            if (crimeType === "__all__") return row.Total;
+            return row[crimeType] ?? 0;
+        }
+
+        function sumTotal(rows, crimeType) {
+            return rows.reduce((a, r) => a + totalForRow(r, crimeType), 0);
+        }
+
+        function groupBy(rows, key, crimeType) {
+            const m = new Map();
+            for (const r of rows) {
+                const k = r[key];
+                m.set(k, (m.get(k) ?? 0) + totalForRow(r, crimeType));
             }
-            
-            const ctx = ctxLine.getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 170);
-            gradient.addColorStop(0, 'rgba(239, 68, 68, 0.4)');
-            gradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
-            
-            new Chart(ctx, {
-                type: 'line',
+            return m;
+        }
+
+        function seriesByYear(rows, crimeType) {
+            const m = new Map(YEARS.map(y => [y, 0]));
+            for (const r of rows) {
+                m.set(r.Year, (m.get(r.Year) ?? 0) + totalForRow(r, crimeType));
+            }
+            // only selected range
+            const arr = [];
+            for (const y of YEARS) {
+                if (y < state.filters.yearFrom || y > state.filters.yearTo) continue;
+                arr.push({ year: y, value: m.get(y) ?? 0 });
+            }
+            return arr;
+        }
+
+        function crimeTypeDistribution(rows) {
+            const dist = CRIME_TYPES.map(ct => ({ type: ct, value: rows.reduce((a, r) => a + (r[ct] ?? 0), 0) }));
+            dist.sort((a, b) => b.value - a.value);
+            return dist;
+        }
+
+        function dominantCrime(rows) {
+            const dist = crimeTypeDistribution(rows);
+            return dist[0] ?? { type: "—", value: 0 };
+        }
+
+        function yoyForSelection(rows, crimeType) {
+            // YoY uses last year in range vs previous year, if available
+            const f = state.filters;
+            const y2 = f.yearTo;
+            const y1 = y2 - 1;
+            if (y1 < f.yearFrom) return { pct: NaN, delta: 0, a: 0, b: 0, y1, y2 };
+
+            const a = sumTotal(rows.filter(r => r.Year === y1), crimeType);
+            const b = sumTotal(rows.filter(r => r.Year === y2), crimeType);
+            const pct = a === 0 ? NaN : ((b - a) / a) * 100;
+            return { pct, delta: b - a, a, b, y1, y2 };
+        }
+
+        function crimeRateIndex(rows, crimeType) {
+            // synthetic rate per 100k based on state population sum (or per selection)
+            const f = state.filters;
+            let pop = 0;
+            if (f.state !== "__all__") {
+                pop = STATE_POP[f.state] ?? 50e6;
+            } else {
+                const states = Array.from(new Set(rows.map(r => r.State)));
+                pop = states.reduce((a, s) => a + (STATE_POP[s] ?? 50e6), 0);
+            }
+            if (f.district !== "__all__") {
+                // approximate district share
+                pop = pop / 5; // since we used 5 districts/state in demo
+            }
+            const total = sumTotal(rows, crimeType);
+            const rate = pop ? (total / pop) * 100000 : 0;
+            return rate;
+        }
+
+        // -----------------------------
+        // Charts
+        // -----------------------------
+        let lineChart, barChart, pieChart, heroMiniLine;
+
+        function makeGradient(ctx, h, c1, c2) {
+            const g = ctx.createLinearGradient(0, 0, 0, h);
+            g.addColorStop(0, c1);
+            g.addColorStop(1, c2);
+            return g;
+        }
+
+        function chartDefaults() {
+            Chart.defaults.color = "rgba(255,255,255,.78)";
+            Chart.defaults.borderColor = "rgba(255,255,255,.10)";
+            Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+            Chart.defaults.plugins.legend.labels.boxWidth = 10;
+            Chart.defaults.plugins.legend.labels.boxHeight = 10;
+            Chart.defaults.plugins.tooltip.backgroundColor = "rgba(15,23,42,.9)";
+            Chart.defaults.plugins.tooltip.borderColor = "rgba(255,255,255,.14)";
+            Chart.defaults.plugins.tooltip.borderWidth = 1;
+            Chart.defaults.plugins.tooltip.titleColor = "rgba(255,255,255,.92)";
+            Chart.defaults.plugins.tooltip.bodyColor = "rgba(255,255,255,.82)";
+        }
+
+        function buildLineChart(series) {
+            const canvas = $("#lineChart");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            // Red gradient
+            const grad = makeGradient(ctx, 220, "rgba(220,38,38,.45)", "rgba(153,27,27,0)");
+
+            if (lineChart) lineChart.destroy();
+
+            lineChart = new Chart(ctx, {
+                type: "line",
                 data: {
-                    labels: trendData.labels,
+                    labels: series.map(d => d.year),
                     datasets: [{
-                        label: 'Total Crimes',
-                        data: trendData.values,
-                        borderColor: '#ef4444',
-                        backgroundColor: gradient,
-                        borderWidth: 2,
+                        label: "Total Crimes",
+                        data: series.map(d => d.value),
                         fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#070A1A',
-                        pointBorderColor: '#ef4444',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        backgroundColor: grad,
+                        borderColor: "rgba(248,113,113,.95)", // red-400
+                        pointBackgroundColor: (ctx) => {
+                            const year = ctx.raw?.x || series[ctx.dataIndex]?.year;
+                            return PROJECTED_YEARS.includes(year) ? "#fca5a5" : "rgba(255,255,255,.9)";
+                        },
+                        pointBorderColor: (ctx) => {
+                            const year = ctx.raw?.x || series[ctx.dataIndex]?.year;
+                            return PROJECTED_YEARS.includes(year) ? "#fca5a5" : "rgba(248,113,113,.9)";
+                        },
+                        pointRadius: (ctx) => {
+                            const year = ctx.raw?.x || series[ctx.dataIndex]?.year;
+                            return PROJECTED_YEARS.includes(year) ? 5 : 3;
+                        },
+                        segment: {
+                            borderDash: (ctx) => {
+                                // Dash the line overlap if approaching projected year
+                                // simpler: if p0 or p1 is projected
+                                const p0 = series[ctx.p0DataIndex]?.year;
+                                const p1 = series[ctx.p1DataIndex]?.year;
+                                if (PROJECTED_YEARS.includes(p1)) return [6, 6];
+                                return undefined;
+                            },
+                            borderColor: (ctx) => {
+                                const p1 = series[ctx.p1DataIndex]?.year;
+                                if (PROJECTED_YEARS.includes(p1)) return "rgba(252, 165, 165, 0.8)"; // Light red for prediction
+                                return undefined;
+                            }
+                        },
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (ctx) => {
+                                    const year = parseInt(ctx[0].label);
+                                    return PROJECTED_YEARS.includes(year) ? `${year} (PROJECTION)` : year;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { ticks: { callback: (v) => (v >= 1000 ? (v / 1000).toFixed(1) + "k" : v) } }
+                    }
+                }
+            });
+        }
+
+        function buildBarChart(labels, values) {
+            const canvas = $("#barChart");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            if (barChart) barChart.destroy();
+            barChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{
+                        label: "Total",
+                        data: values,
+                        backgroundColor: "rgba(220,38,38,.35)",
+                        borderColor: "rgba(248,113,113,.45)",
+                        borderWidth: 1.2,
+                        borderRadius: 10,
+                        maxBarThickness: 36
                     }]
                 },
                 options: {
@@ -982,36 +1287,391 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } },
-                        y: { 
-                            grid: { color: 'rgba(255,255,255,0.05)' }, 
-                            ticks: { 
-                                color: 'rgba(255,255,255,0.5)',
-                                callback: function(value) {
-                                    if(value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
-                                    if(value >= 1000) return (value / 1000).toFixed(1) + 'k';
-                                    return value;
-                                }
-                            }
-                        }
-                    },
-                    animation: { duration: 750, easing: 'easeOutQuart' }
+                        x: { grid: { display: false }, ticks: { color: "rgba(255,255,255,.75)" } },
+                        y: { ticks: { callback: (v) => (v >= 1000 ? (v / 1000).toFixed(1) + "k" : v) } }
+                    }
                 }
             });
         }
 
-        function setYearFilters() {
-            if(!DOM.yearFromSelect) return;
-            let ops = '';
-            for(let y=2017; y<=2023; y++) ops += `<option value="${y}">${y}</option>`;
-            DOM.yearFromSelect.innerHTML = ops; DOM.yearFromSelect.value = 2017;
-            DOM.yearToSelect.innerHTML = ops; DOM.yearToSelect.value = 2023;
+        function buildPieChart(dist) {
+            const canvas = $("#pieChart");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            if (pieChart) pieChart.destroy();
+            const top = dist.slice(0, 6);
+            const rest = dist.slice(6).reduce((a, b) => a + b.value, 0);
+            const labels = top.map(d => d.type).concat(rest > 0 ? ["Others"] : []);
+            const values = top.map(d => d.value).concat(rest > 0 ? [rest] : []);
+            const colors = [
+                "rgba(220,38,38,.75)",  // red-600
+                "rgba(234,88,12,.70)",  // orange-600
+                "rgba(245,158,11,.68)", // amber-500
+                "rgba(185,28,28,.62)",  // red-700
+                "rgba(124,45,18,.62)",  // orange-900
+                "rgba(254,202,202,.62)",// red-200
+                "rgba(148,163,184,.45)" // slate
+            ];
+            pieChart = new Chart(ctx, {
+                type: "doughnut",
+                data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: "rgba(255,255,255,.10)", borderWidth: 1 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "62%",
+                    plugins: {
+                        legend: { position: "bottom", labels: { color: "rgba(255,255,255,.78)" } },
+                        tooltip: { callbacks: { label: (c) => `${c.label}: ${formatInt(c.parsed)}` } }
+                    }
+                }
+            });
         }
 
-        document.addEventListener('DOMContentLoaded', initApp);
-    </script>
-</body>
-</html>
+        function buildHeroMini(series) {
+            const canvas = $("#heroMiniLine");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            const grad = makeGradient(ctx, 130, "rgba(220,38,38,.28)", "rgba(220,38,38,0)");
+            if (heroMiniLine) heroMiniLine.destroy();
+            heroMiniLine = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: series.map(d => d.year),
+                    datasets: [{
+                        data: series.map(d => d.value),
+                        fill: true,
+                        backgroundColor: grad,
+                        borderColor: "rgba(220,38,38,.85)",
+                        pointRadius: 0,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    }
+                }
+            });
+        }
+
+        // -----------------------------
+        // Map
+        // -----------------------------
+
+        let map, mapLayerGroup;
+        function initMap() {
+            if (!document.getElementById("map")) return;
+            map = L.map('map', { zoomControl: true, scrollWheelZoom: false }).setView([22.5, 79], 4.6);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap & CARTO'
+            }).addTo(map);
+
+            mapLayerGroup = L.layerGroup().addTo(map);
+
+            map.on("dblclick", () => {
+                state.filters.state = "__all__";
+                state.filters.district = "__all__";
+                $("#stateSelect").value = "__all__";
+                $("#districtSelect").value = "__all__";
+                render();
+            });
+        }
+
+        function intensityColor(v, max) {
+            const t = max ? clamp(v / max, 0, 1) : 0;
+            // Red scale (light red to deep dark red)
+            // r=255, g goes down, b goes down
+            // 254, 202, 202 (light) -> 127, 29, 29 (dark)
+            const r = Math.round(254 + t * (127 - 254));
+            const g = Math.round(202 + t * (29 - 202));
+            const b = Math.round(202 + t * (29 - 202));
+            return `rgba(${r},${g},${b},${0.5 + 0.4 * t})`;
+        }
+
+        function renderMap(rows) {
+            if (!map || !mapLayerGroup) return;
+            mapLayerGroup.clearLayers();
+            const ct = state.filters.crimeType;
+
+            // Decision: State View vs District View
+            const isStateView = (state.filters.state === "__all__");
+
+            if (isStateView) {
+                // ------------------
+                // STATE BUBBLES
+                // ------------------
+                const byState = groupBy(rows, "State", ct);
+                const entries = Array.from(byState.entries());
+                const max = entries.reduce((m, [, v]) => Math.max(m, v), 0);
+
+                for (const [st, val] of entries) {
+                    const c = STATE_CENTROIDS[st];
+                    if (!c) continue;
+                    const radius = 90000 + (max ? (val / max) * 180000 : 90000);
+
+                    const circle = L.circle(c, {
+                        radius,
+                        color: "rgba(255,255,255,.20)",
+                        weight: 1,
+                        fillColor: intensityColor(val, max),
+                        fillOpacity: 0.95
+                    }).addTo(mapLayerGroup);
+
+                    circle.bindTooltip(
+                        `<div style="min-width:160px">
+                 <div style="font-weight:700; margin-bottom:2px">${st}</div>
+                 <div style="opacity:.85; font-size:12px">Total: <b>${formatInt(val)}</b></div>
+                 <div style="opacity:.75; font-size:11px; margin-top:4px; color:#a5b4fc">Click to drill down</div>
+               </div>`,
+                        { sticky: true, direction: "top" }
+                    );
+
+                    circle.on("click", () => {
+                        state.filters.state = st;
+                        state.filters.district = "__all__";
+                        $("#stateSelect").value = st;
+                        $("#stateSelect").dispatchEvent(new Event("change")); // trigger refresh
+                        render();
+                    });
+                }
+
+                // Reset view to India center
+                map.flyTo([22.5, 79], 4.6, { duration: 1.2 });
+
+            } else {
+                // ------------------
+                // DISTRICT BUBBLES (Drill down)
+                // ------------------
+                const selectedState = state.filters.state;
+                const center = STATE_CENTROIDS[selectedState];
+
+                // Center map on state
+                if (center) map.flyTo(center, 7, { duration: 1.2 });
+
+                // Group by district for the filtered rows (which are already filtered by state)
+                const byDistrict = groupBy(rows, "District", ct);
+                const entries = Array.from(byDistrict.entries());
+                const max = entries.reduce((m, [, v]) => Math.max(m, v), 0);
+
+                // Deterministic RNG for placement stability
+                const rng = mulberry32(selectedState.length * 42);
+
+                for (const [dist, val] of entries) {
+                    // Generate a pseudo-random position around the state center
+                    // In a real app, we'd have a DISTRICT_COORDINATES table.
+                    // Here, we scatter them within ~1.5 degrees of the state center.
+                    if (!center) continue;
+
+                    let lat, lng;
+                    if (DISTRICT_COORDINATES[dist]) {
+                        [lat, lng] = DISTRICT_COORDINATES[dist];
+                    } else {
+                        // Fallback: Generate a pseudo-random position around the state center
+
+                        // Create a stable hash from string to keep position constant across renders
+                        let hash = 0;
+                        for (let i = 0; i < dist.length; i++) hash = dist.charCodeAt(i) + ((hash << 5) - hash);
+                        const norm = (hash & 0xFFFFFF) / 0xFFFFFF; // 0..1
+                        const angle = norm * 2 * Math.PI;
+                        const distOffset = 0.3 + (Math.abs(hash % 100) / 100) * 1.2; // 0.3 to 1.5 degrees
+
+                        lat = center[0] + distOffset * Math.cos(angle);
+                        lng = center[1] + distOffset * Math.sin(angle);
+                    }
+
+                    const radius = 15000 + (max ? (val / max) * 40000 : 10000); // Smaller bubbles for districts
+
+                    const isActive = (state.filters.district === dist);
+
+                    const circle = L.circle([lat, lng], {
+                        radius,
+                        color: isActive ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.3)",
+                        weight: isActive ? 3 : 1,
+                        fillColor: intensityColor(val, max),
+                        fillOpacity: 0.9
+                    }).addTo(mapLayerGroup);
+
+                    circle.bindTooltip(
+                        `<div style="min-width:140px">
+                  <div style="font-weight:700; margin-bottom:2px">${dist}</div>
+                  <div style="opacity:.85; font-size:12px">Total: <b>${formatInt(val)}</b></div>
+                  <div style="opacity:.65; font-size:10px; margin-top:2px">${state.filters.state}</div>
+                </div>`,
+                        { sticky: true, direction: "top" }
+                    );
+
+                    circle.on("click", () => {
+                        state.filters.district = dist;
+                        $("#districtSelect").value = dist;
+                        render(); // re-render to highlight selected/filter table
+                    });
+                }
+            }
+        }
+
+        // -----------------------------
+        // Table
+        // -----------------------------
+        function filteredTableRows(rows) {
+            // Expand to "view rows": each data row becomes a view row with selected crime type
+            const ct = state.filters.crimeType;
+            const view = rows.map(r => {
+                const type = ct === "__all__" ? "Total (All)" : ct;
+                const val = ct === "__all__" ? r.Total : (r[ct] ?? 0);
+                return { State: r.State, District: r.District, Year: r.Year, Total: r.Total, CrimeType: type, CrimeValue: val };
+            });
+
+            const q = state.tableSearch.trim().toLowerCase();
+            let out = view;
+            if (q) {
+                out = out.filter(v =>
+                    v.State.toLowerCase().includes(q) ||
+                    v.District.toLowerCase().includes(q) ||
+                    String(v.Year).includes(q) ||
+                    v.CrimeType.toLowerCase().includes(q)
+                );
+            }
+            return out;
+        }
+
+        function sortRows(rows) {
+            const { key, dir } = state.sort;
+            const mul = dir === "asc" ? 1 : -1;
+            return rows.slice().sort((a, b) => {
+                const va = a[key], vb = b[key];
+                if (typeof va === "number" && typeof vb === "number") return (va - vb) * mul;
+                return String(va).localeCompare(String(vb)) * mul;
+            });
+        }
+
+        function renderTable(rows) {
+            const tbody = $("#tableBody");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            const view = sortRows(filteredTableRows(rows));
+            const totalCount = view.length;
+
+            const pages = Math.max(1, Math.ceil(totalCount / state.pageSize));
+            state.page = clamp(state.page, 1, pages);
+
+            const start = (state.page - 1) * state.pageSize;
+            const slice = view.slice(start, start + state.pageSize);
+
+            for (const r of slice) {
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-white/5 transition-colors";
+                tr.innerHTML = `
+          <td class="px-4 py-3 whitespace-nowrap">${r.State}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${r.District}</td>
+          <td class="px-4 py-3">${r.Year}</td>
+          <td class="px-4 py-3">${formatInt(r.Total)}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${r.CrimeType}</td>
+          <td class="px-4 py-3 text-right font-medium">${formatInt(r.CrimeValue)}</td>
+        `;
+                tbody.appendChild(tr);
+            }
+
+            setTxt("#tableMeta", `${formatInt(totalCount)} rows (showing ${start + 1}-${Math.min(start + state.pageSize, totalCount)})`);
+            setTxt("#pageInfo", `Page ${state.page} / ${pages}`);
+
+            const btnPrev = $("#prevPageBtn");
+            if (btnPrev) btnPrev.disabled = state.page <= 1;
+
+            const btnNext = $("#nextPageBtn");
+            if (btnNext) btnNext.disabled = state.page >= pages;
+
+            // sort indicators
+            const keys = ["State", "District", "Year", "Total", "CrimeType", "CrimeValue"];
+            for (const k of keys) {
+                const el = $("#sort" + k);
+                if (!el) continue;
+                el.textContent = (state.sort.key === k) ? (state.sort.dir === "asc" ? " ▲" : " ▼") : "";
+            }
+        }
+
+        // -----------------------------
+        // Export
+        // -----------------------------
+        function toCSV(rows) {
+            const headers = ["State", "District", "Year", ...CRIME_TYPES, "Total"];
+            const lines = [headers.join(",")];
+            for (const r of rows) {
+                const arr = headers.map(h => {
+                    const v = r[h];
+                    if (typeof v === "string") {
+                        const s = v.replaceAll('"', '""');
+                        return `"${s}"`;
+                    }
+                    return String(v ?? "");
+                });
+                lines.push(arr.join(","));
+            }
+            return lines.join("\n");
+        }
+
+        function download(filename, content, mime) {
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+        }
+
+        function exportCurrentCSV() {
+            const rows = applyCurrentFilters();
+            download("crimescope_export.csv", toCSV(rows), "text/csv;charset=utf-8");
+        }
+
+        function exportCurrentPDF() {
+            const rows = applyCurrentFilters();
+            const f = state.filters;
+            const ct = f.crimeType === "__all__" ? "All crimes (Total)" : f.crimeType;
+            const title = `CrimeScope Export — ${ct} — ${f.state === "__all__" ? "All states" : f.state}${f.district === "__all__" ? "" : (" / " + f.district)} — ${f.yearFrom}-${f.yearTo}`;
+            const total = sumTotal(rows, f.crimeType);
+            const yoy = yoyForSelection(rows, f.crimeType);
+            const dom = dominantCrime(rows);
+            const series = seriesByYear(rows, f.crimeType);
+
+            const pre = `
+${title}
+
+Total crimes: ${formatInt(total)}
+YoY: ${isFinite(yoy.pct) ? formatPct(yoy.pct) : "—"}  (${yoy.y1}→${yoy.y2})
+Dominant crime: ${dom.type} (${formatInt(dom.value)})
+
+Trend:
+${series.map(s => `${s.year}: ${formatInt(s.value)}`).join("\n")}
+
+Notes:
+- This is a lightweight PDF-like export as a printable document.
+- In production, replace with jsPDF/html2pdf for richer output.
+`;
+            const w = window.open("", "_blank");
+            w.document.write(`
+        <!DOCTYPE html><html><head><meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>CrimeScope Export</title>
+        <style>
+          body{font-family: Inter, system-ui, sans-serif; padding:24px; color:#0b1026;}
+          h1{font-size:18px; margin:0 0 10px;}
+          pre{white-space:pre-wrap; font-size:13px; line-height:1.45; background:#f6f7fb; border:1px solid #e6e8f0; padding:14px; border-radius:12px;}
+          .muted{color:#4b5563; font-size:12px; margin-top:10px;}
+          @media print{ body{padding:0} pre{border:none} }
+        </style></head><body>
+          <h1>CrimeScope — Export</h1>
+          <pre>${pre.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}</pre>
+          <div class="muted">Generated at ${new Date().toLocaleString()}</div>
+          <script>setTimeout(()=>window.print(), 250);<\/script>
+        </body></html>
       `);
             w.document.close();
         }
@@ -1346,10 +2006,29 @@
                 $$(sel).forEach(el => el.addEventListener(evt, fn));
             };
 
-            bind("#applyFiltersBtn", "click", () => {
+            bind("#applyFiltersBtn", "click", async () => {
+                const applyBtn = $("#applyFiltersBtn");
+                const originalText = applyBtn.innerHTML;
+                applyBtn.innerHTML = '<span class="animate-pulse">Analyzing via Python...</span>';
+
                 syncFiltersFromUI();
                 state.page = 1;
                 render();
+
+                // Fetch ML Prediction from Python backend
+                try {
+                    const s = state.filters.state === "__all__" ? "all" : state.filters.state;
+                    const pred = await window.ApiClient.getPrediction(s, state.filters.yearTo + 1);
+                    if (pred && $("#kpiPrediction")) {
+                        $("#kpiPrediction").textContent = formatInt(pred.predicted_crimes);
+                        if ($("#predictModel")) $("#predictModel").textContent = pred.model_used;
+                        if ($("#predictTargetYear")) $("#predictTargetYear").textContent = pred.target_year;
+                    }
+                } catch (e) {
+                    console.error("Prediction API failed", e);
+                }
+
+                applyBtn.innerHTML = originalText;
                 closeDrawer();
             });
 
@@ -1594,18 +2273,43 @@
         // -----------------------------
         // Init
         // -----------------------------
-        try {
-            chartDefaults();
-            initFilters();
-            initMap();
-            initUIEvents();
-            // Initialize slider state based on default toggle
-            if (typeof updateYearSliderRange === "function") updateYearSliderRange();
-            resetFilters(); // sets UI + initial render
-        } catch (e) {
-            console.error("Dashboard Init Error:", e);
-            alert("Dashboard Init Error: " + e.message);
-        }
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Fetch the live analytic dataset from the Python Backend
+                const applyBtn = document.getElementById('applyFiltersBtn');
+                if (applyBtn) applyBtn.innerHTML = '<span class="animate-pulse">Loading API...</span>';
+
+                if (window.ApiClient) {
+                    DATA = await window.ApiClient.getDataset();
+                } else {
+                    console.error("ApiClient not found!");
+                }
+
+                if (applyBtn) applyBtn.innerHTML = 'Apply Filters';
+
+                chartDefaults();
+                initFilters();
+                initMap();
+                initUIEvents();
+                // Initialize slider state based on default toggle
+                if (typeof updateYearSliderRange === "function") updateYearSliderRange();
+                resetFilters(); // sets UI + initial render
+
+                // Fetch initial ML Prediction
+                try {
+                    const pred = await window.ApiClient.getPrediction("all", state.filters.yearTo + 1);
+                    if (pred && document.getElementById("kpiPrediction")) {
+                        document.getElementById("kpiPrediction").textContent = formatInt(pred.predicted_crimes);
+                        if (document.getElementById("predictModel")) document.getElementById("predictModel").textContent = pred.model_used;
+                        if (document.getElementById("predictTargetYear")) document.getElementById("predictTargetYear").textContent = pred.target_year;
+                    }
+                } catch (e) { }
+
+            } catch (e) {
+                console.error("Dashboard Init Error:", e);
+                alert("Backend Connection Error. Ensure Python API is running on :5000");
+            }
+        });
     </script>
 </body>
 

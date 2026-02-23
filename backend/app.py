@@ -188,6 +188,50 @@ def get_prediction():
     })
 
 
+@app.route('/api/dataset', methods=['GET'])
+def get_dataset():
+    """
+    Returns the complete preprocessed dataset so the frontend 
+    can maintain all its interactive charts, maps, and tables 
+    without relying on fake mock generation.
+    """
+    data = get_data()
+    if not data:
+         return jsonify([]), 404
+         
+    df, _ = data
+    
+    # Map backend columns names to what frontend expects 
+    # The frontend expects: State, District, Year, Total and specific CrimeTypes
+    # For now, we return it as is but format names to Title Case if needed.
+    # The backend excel columns are assumed to be state_name, district_name, year, total_crimes
+    
+    # We will rename state_name -> State, district_name -> District, year -> Year, total_crimes -> Total
+    export_df = df.copy()
+    
+    rename_map = {
+        'state_name': 'State',
+        'district_name': 'District',
+        'year': 'Year',
+        'total_crimes': 'Total'
+    }
+    
+    # Title-case all crime type columns so they match the frontend's Expectation
+    for col in export_df.columns:
+        if col not in rename_map:
+            # e.g 'murder' -> 'Murder', 'cyber_crime' -> 'Cyber Crime'
+            new_col = col.replace('_', ' ').title()
+            rename_map[col] = new_col
+            
+    export_df.rename(columns=rename_map, inplace=True)
+    
+    # Replace NaN with 0
+    export_df.fillna(0, inplace=True)
+    
+    records = export_df.to_dict(orient='records')
+    return jsonify(records)
+
+
 if __name__ == '__main__':
     # Run the Flask app on port 5000
     print("Starting CrimeScope API Backend on port 5000...")
