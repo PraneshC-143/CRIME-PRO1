@@ -19,3 +19,11 @@ __pycache__/
 
 # Jupyter Notebook
 .ipynb_checkpoints/
+
+# Temporary session scripts and test files
+check_js.py
+inject_coords.py
+run_playwright.py
+test.js
+backup.html
+deleted_code.diff

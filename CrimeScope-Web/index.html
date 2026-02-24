@@ -144,6 +144,14 @@
             background: linear-gradient(135deg, rgba(220, 38, 38, .98), rgba(153, 27, 27, .98));
         }
 
+        option {
+            background-color: #0f172a;
+            /* slate-900 */
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            padding: 0.5rem;
+        }
+
         .pill {
             display: inline-flex;
             align-items: center;
@@ -283,8 +291,8 @@
 
                 <div class="hidden md:flex items-center gap-2">
                     <span class="pill">
-                        <span class="h-2 w-2 rounded-full bg-emerald-400/90"></span>
-                        Live Demo Data
+                        <span class="h-2 w-2 rounded-full bg-emerald-400/90 shadow-glow"></span>
+                        Official Dataset
                     </span>
                     <button id="jumpDashboardBtn" class="btn btn-primary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -353,7 +361,7 @@
                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round" />
                             </svg>
-                            Reset demo
+                            Reset filters
                         </button>
                         <div class="flex items-center gap-2 ml-1 text-sm muted2">
                             <span class="kbd">/</span><span>Search</span>
@@ -483,92 +491,161 @@
             </div>
 
             <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Filters -->
+                <!-- Filters Sidebar -->
                 <aside id="filtersPanel"
-                    class="lg:col-span-3 glass-strong rounded-3xl p-5 shadow-glass soft-ring h-fit">
+                    class="lg:col-span-3 glass-strong rounded-3xl p-5 shadow-glass soft-ring h-fit flex flex-col gap-6 sticky top-6 z-40">
+
                     <div class="flex items-center justify-between gap-2">
                         <div>
                             <div class="text-sm font-semibold">Filters</div>
                             <div class="text-xs muted2 mt-0.5">Refine by region, years, and crime type</div>
                         </div>
-                        <button id="clearFiltersBtn" class="btn" title="Reset filters">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M3 12a9 9 0 0 1 15.3-6.4M21 12a9 9 0 0 1-15.3 6.4M3 5v3h3M21 19v-3h-3"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
+                        <button id="clearFiltersBtn"
+                            class="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                            title="Reset filters">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                <path d="M3 3v5h5"></path>
                             </svg>
-                            Reset
                         </button>
                     </div>
 
-                    <div class="mt-4 space-y-4">
-                        <div>
-                            <label class="text-xs muted2">State</label>
-                            <select id="stateSelect"
-                                class="mt-1 w-full rounded-2xl bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-white/20 focus:ring-2 focus:ring-indigo-400/20">
-                                <option value="__all__">All states</option>
-                            </select>
+                    <!-- Filter Selectors (Vertical Stack) -->
+                    <div class="space-y-4">
+
+                        <!-- State -->
+                        <div class="relative">
+                            <label
+                                class="block text-[11px] uppercase tracking-wider text-white/50 mb-1.5 font-semibold">State</label>
+                            <div class="relative">
+                                <div
+                                    class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-white/40">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                </div>
+                                <select id="stateSelect"
+                                    class="w-full appearance-none rounded-2xl bg-white/5 border border-white/10 pl-9 pr-10 py-2.5 text-sm outline-none focus:border-white/20 focus:ring-2 focus:ring-indigo-400/20 text-white/90 cursor-pointer hover:bg-white/10 transition-colors">
+                                    <option value="__all__">All states</option>
+                                </select>
+                                <div
+                                    class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="text-xs muted2">District</label>
-                            <select id="districtSelect"
-                                class="mt-1 w-full rounded-2xl bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-white/20 focus:ring-2 focus:ring-indigo-400/20">
-                                <option value="__all__">All districts</option>
-                            </select>
+                        <!-- District -->
+                        <div class="relative">
+                            <label
+                                class="block text-[11px] uppercase tracking-wider text-white/50 mb-1.5 font-semibold">District</label>
+                            <div class="relative">
+                                <div
+                                    class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-white/40">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </div>
+                                <select id="districtSelect"
+                                    class="w-full appearance-none rounded-2xl bg-white/5 border border-white/10 pl-9 pr-10 py-2.5 text-sm outline-none focus:border-white/20 focus:ring-2 focus:ring-indigo-400/20 text-white/90 cursor-pointer hover:bg-white/10 transition-colors">
+                                    <option value="__all__">All districts</option>
+                                </select>
+                                <div
+                                    class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="text-xs muted2">Crime type</label>
-                            <select id="crimeTypeSelect"
-                                class="mt-1 w-full rounded-2xl bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-white/20 focus:ring-2 focus:ring-indigo-400/20">
-                                <option value="__all__">All crimes (Total)</option>
-                            </select>
+                        <!-- Crime Type -->
+                        <div class="relative">
+                            <label
+                                class="block text-[11px] uppercase tracking-wider text-white/50 mb-1.5 font-semibold">Crime
+                                Type</label>
+                            <div class="relative">
+                                <div
+                                    class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-white/40">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                    </svg>
+                                </div>
+                                <select id="crimeTypeSelect"
+                                    class="w-full appearance-none rounded-2xl bg-white/5 border border-white/10 pl-9 pr-10 py-2.5 text-sm outline-none focus:border-white/20 focus:ring-2 focus:ring-indigo-400/20 text-white/90 cursor-pointer hover:bg-white/10 transition-colors">
+                                    <option value="__all__">All crimes (Total)</option>
+                                </select>
+                                <div
+                                    class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-white/40">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-xs muted2">From year</label>
+                        <!-- Years Range -->
+                        <div class="relative">
+                            <label
+                                class="block text-[11px] uppercase tracking-wider text-white/50 mb-1.5 font-semibold">Time
+                                Period</label>
+                            <div
+                                class="flex items-center justify-center gap-1 bg-white/5 border border-white/10 rounded-2xl px-2 hover:bg-white/10 transition-colors">
+                                <div class="pl-2 flex items-center pointer-events-none text-white/40">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                </div>
                                 <select id="yearFromSelect"
-                                    class="mt-1 w-full rounded-2xl bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-white/20 focus:ring-2 focus:ring-indigo-400/20"></select>
-                            </div>
-                            <div>
-                                <label class="text-xs muted2">To year</label>
+                                    class="appearance-none bg-transparent border-none py-2.5 px-0 text-sm outline-none text-white/90 cursor-pointer relative z-10 w-full text-center">
+                                </select>
+                                <span class="text-white/40 text-[10px]">—</span>
                                 <select id="yearToSelect"
-                                    class="mt-1 w-full rounded-2xl bg-white/5 border border-white/10 px-3 py-2 text-sm outline-none focus:border-white/20 focus:ring-2 focus:ring-indigo-400/20"></select>
+                                    class="appearance-none bg-transparent border-none py-2.5 px-0 text-sm outline-none text-white/90 cursor-pointer relative z-10 w-full text-center">
+                                </select>
                             </div>
                         </div>
 
-                        <div class="glass rounded-2xl p-4 soft-ring">
+                        <div class="glass rounded-2xl p-4 soft-ring mt-6">
                             <div class="flex items-center justify-between">
-                                <div class="text-xs muted2">Data quality</div>
-                                <span id="qualityPill" class="pill">Synthetic demo</span>
+                                <div class="text-xs text-white/70">Data source</div>
+                                <span id="qualityPill" class="pill text-[10px] py-0.5">Local Dataset</span>
                             </div>
-                            <div class="mt-2 text-xs muted2 leading-relaxed">
-                                This standalone demo generates a realistic dataset client-side. Replace <span
-                                    class="text-white/80 font-medium">generateDemoData()</span> with your CSV/JSON
-                                loader.
+                            <div class="mt-2 text-[11px] text-white/50 leading-relaxed">
+                                Exploring the official Indian Crime Analysis database. Map drill-downs and ML
+                                Predictions active.
                             </div>
                         </div>
 
-                        <div class="flex gap-2">
-                            <button id="applyFiltersBtn" class="btn btn-primary w-full justify-center">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" />
+                        <!-- Actions -->
+                        <div class="pt-4 border-t border-white/5">
+                            <button id="applyFiltersBtn" class="btn btn-primary shadow-glow w-full flex justify-center">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                                 </svg>
-                                Apply
+                                Apply Filters
                             </button>
-                        </div>
-
-                        <div class="text-xs muted2">
-                            Keyboard: <span class="kbd">F</span> toggle filters • <span class="kbd">/</span> focus
-                            search
                         </div>
                     </div>
                 </aside>
 
-                <!-- Main -->
+                <!-- Main Workspace -->
                 <div class="lg:col-span-9 space-y-6">
                     <!-- KPIs -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -661,7 +738,9 @@
                                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round" />
                                 </svg>
-                                ML Prediction (<span id="predictTargetYear">2024</span>)
+                                ML Prediction
+                                (<input type="number" id="predictInputYear" value="2024" min="2024" max="2100"
+                                    class="w-16 bg-transparent border-b border-white/30 text-center text-white focus:outline-none appearance-none ml-1">)
                             </div>
                             <div class="text-xs muted2 mt-1">Based on historical variance using <span id="predictModel"
                                     class="font-medium text-white/90">—</span></div>
@@ -864,14 +943,13 @@
         </div>
     </div>
 
-
+    <!-- Main Application Logic -->
     <script>
         // -----------------------------
-        // Demo dataset (replace with CSV/JSON loader)
-        // Schema resembles: State, District, Year, plus IPC headers
+        // Populate specific dropdown definitions dynamically
         // -----------------------------
-        const YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028];
-        const PROJECTED_YEARS = [2024, 2025, 2026, 2027, 2028];
+        let YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023]; // Pre-populated, but updated by initFilters()
+        const PROJECTED_YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
 
         const CRIME_TYPES = [
             "Murder",
@@ -939,25 +1017,597 @@
 
         // Precise coordinates for demo districts found in STATE_DISTRICTS
         const DISTRICT_COORDINATES = {
-            // Tamil Nadu
-            "Chennai": [13.0827, 80.2707], "Coimbatore": [11.0168, 76.9558], "Madurai": [9.9252, 78.1198], "Salem": [11.6643, 78.1460], "Tiruchirappalli": [10.7905, 78.7047],
-            // Uttar Pradesh
-            "Lucknow": [26.8467, 80.9462], "Kanpur Nagar": [26.4499, 80.3319], "Varanasi": [25.3176, 82.9739], "Agra": [27.1767, 78.0081], "Ghaziabad": [28.6692, 77.4538],
-            // Maharashtra
-            "Mumbai": [19.0760, 72.8777], "Pune": [18.5204, 73.8567], "Nagpur": [21.1458, 79.0882], "Nashik": [19.9975, 73.7898], "Thane": [19.2183, 72.9781],
-            // Bihar
-            "Patna": [25.5941, 85.1376], "Gaya": [24.7914, 85.0002], "Bhagalpur": [25.2425, 87.0143], "Muzaffarpur": [26.1197, 85.3910], "Darbhanga": [26.1542, 85.8918],
-            // West Bengal
-            "Kolkata": [22.5726, 88.3639], "Howrah": [22.5958, 88.2636], "North 24 Parganas": [22.6168, 88.4029], "Siliguri": [26.7271, 88.3953], "Asansol": [23.6889, 86.9661],
-            // Karnataka
-            "Bengaluru": [12.9716, 77.5946], "Mysuru": [12.2958, 76.6394], "Mangaluru": [12.9141, 74.8560], "Hubballi": [15.3647, 75.1240], "Belagavi": [15.8497, 74.4977],
-            // Kerala
-            "Thiruvananthapuram": [8.5241, 76.9366], "Kochi": [9.9312, 76.2673], "Kozhikode": [11.2588, 75.7804], "Thrissur": [10.5276, 76.2144], "Kannur": [11.8745, 75.3704],
-            // Delhi
-            "New Delhi": [28.6139, 77.2090], "Central Delhi": [28.6453, 77.2456], "South Delhi": [28.4817, 77.1873], "East Delhi": [28.6279, 77.2925], "North Delhi": [28.7183, 77.1645],
-            // Gujarat
-            "Ahmedabad": [23.0225, 72.5714], "Surat": [21.1702, 72.8311], "Vadodara": [22.3072, 73.1812], "Rajkot": [22.3039, 70.8022], "Bhavnagar": [21.7645, 72.1519]
-            // Add more as needed for demo completeness... these cover major requested areas
+            "Andaman Islands": [12.7234, 93.2425],
+            "Nicobar Islands": [8.0056, 93.333],
+            "Adilabad": [19.2982, 78.8652],
+            "Anantapur": [14.4507, 77.6093],
+            "Chittoor": [13.2983, 79.049],
+            "Cuddapah": [14.4705, 78.7003],
+            "East Godavari": [17.1579, 82.0466],
+            "Guntur": [16.2791, 80.0441],
+            "Hyderabad": [17.3844, 78.4593],
+            "Karimnagar": [18.523, 79.4269],
+            "Khammam": [17.6955, 80.7898],
+            "Krishna": [16.4235, 80.7812],
+            "Kurnool": [15.526, 77.9478],
+            "Mahbubnagar": [16.5302, 78.2325],
+            "Medak": [17.8495, 78.2845],
+            "Nalgonda": [17.0839, 79.3385],
+            "Nellore": [14.2386, 79.6895],
+            "Nizamabad": [18.5382, 78.0966],
+            "Prakasam": [15.627, 79.6033],
+            "Rangareddi": [17.2759, 78.1045],
+            "Srikakulam": [18.6162, 84.0836],
+            "Vishakhapatnam": [17.8924, 82.6678],
+            "Vizianagaram": [18.4868, 83.4038],
+            "Warangal": [17.9591, 79.7404],
+            "West Godavari": [16.9049, 81.3565],
+            "Changlang": [27.2881, 96.4046],
+            "East Kameng": [27.3287, 92.9905],
+            "East Siang": [28.1513, 95.1563],
+            "Kurung Kumey": [27.9815, 93.2859],
+            "Lohit": [28.0087, 96.5867],
+            "Lower Dibang Valley": [28.3131, 95.8467],
+            "Lower Subansiri": [27.6793, 93.8743],
+            "Papum Pare": [27.2902, 93.7109],
+            "Tawang": [27.6621, 91.9299],
+            "Tirap": [26.9633, 95.4697],
+            "Upper Dibang Valley": [29.0129, 95.9292],
+            "Upper Siang": [28.7486, 94.7908],
+            "Upper Subansiri": [28.2368, 93.8883],
+            "West Kameng": [27.4338, 92.6237],
+            "West Siang": [28.2824, 94.4591],
+            "Barpeta": [26.4547, 90.9757],
+            "Bongaigaon": [26.4694, 90.6504],
+            "Cachar": [24.7609, 92.8435],
+            "Darrang": [26.5672, 92.0438],
+            "Dhemaji": [27.5839, 94.8653],
+            "Dhuburi": [25.9433, 90.0873],
+            "Dibrugarh": [27.4057, 95.0302],
+            "Goalpara": [26.0562, 90.6079],
+            "Golaghat": [26.3736, 93.7333],
+            "Hailakandi": [24.5075, 92.5996],
+            "Jorhat": [26.7695, 94.2816],
+            "Kamrup": [26.2605, 91.557],
+            "Karbi Anglong": [26.0735, 93.0233],
+            "Karimganj": [24.5847, 92.4009],
+            "Kokrajhar": [26.5994, 90.1885],
+            "Lakhimpur": [27.1749, 94.1482],
+            "Marigaon": [26.2906, 92.2604],
+            "Nagaon": [26.2086, 92.8624],
+            "Nalbari": [26.4863, 91.4609],
+            "North Cachar Hills": [25.3985, 93.0014],
+            "Sibsagar": [26.9988, 94.8871],
+            "Sonitpur": [26.7679, 93.0556],
+            "Tinsukia": [27.6034, 95.6208],
+            "Araria": [26.2647, 87.3612],
+            "Aurangabad": [20.0256, 75.2456],
+            "Banka": [24.8303, 86.8274],
+            "Begusarai": [25.5133, 86.1186],
+            "Bhabua": [24.9762, 83.6041],
+            "Bhagalpur": [25.2862, 87.09],
+            "Bhojpur": [25.4508, 84.5565],
+            "Buxar": [25.5061, 84.0752],
+            "Darbhanga": [26.1583, 86.0322],
+            "Gaya": [24.6805, 84.8379],
+            "Gopalganj": [26.4248, 84.4014],
+            "Jamui": [24.7563, 86.2159],
+            "Jehanabad": [25.1514, 84.8261],
+            "Katihar": [25.5404, 87.6358],
+            "Khagaria": [25.4915, 86.5636],
+            "Kishanganj": [26.2443, 87.9453],
+            "Lakhisarai": [25.1582, 86.1529],
+            "Madhepura": [25.7821, 86.8554],
+            "Madhubani": [26.3556, 86.2308],
+            "Munger": [25.2225, 86.514],
+            "Muzaffarpur": [26.1486, 85.3072],
+            "Nalanda": [25.214, 85.538],
+            "Nawada": [24.8189, 85.6568],
+            "Pashchim Champaran": [27.0534, 84.2914],
+            "Patna": [25.4676, 85.3693],
+            "Purba Champaran": [26.6389, 84.8837],
+            "Purnia": [25.7794, 87.4221],
+            "Rohtas": [24.9403, 83.9755],
+            "Saharsa": [25.8375, 86.5868],
+            "Samastipur": [25.7777, 85.9676],
+            "Saran": [25.9239, 84.7984],
+            "Sheikhpura": [25.1255, 85.7777],
+            "Sheohar": [26.4868, 85.3206],
+            "Sitamarhi": [27.0613, 86.2687],
+            "Siwan": [26.133, 84.3881],
+            "Supaul": [26.2777, 86.7472],
+            "Vaishali": [25.7509, 85.3459],
+            "Chandigarh": [30.7342, 76.7635],
+            "Bastar": [19.3931, 81.4477],
+            "Bilaspur": [31.4074, 76.6465],
+            "Dantewada": [18.5919, 81.097],
+            "Dhamtari": [20.5327, 81.7859],
+            "Durg": [21.1995, 81.3669],
+            "Janjgir-Champa": [21.9667, 82.8076],
+            "Jashpur": [22.767, 83.8883],
+            "Kanker": [20.1219, 81.102],
+            "Kawardha": [22.1129, 81.1875],
+            "Korba": [22.5166, 82.624],
+            "Koriya": [23.4316, 82.1609],
+            "Mahasamund": [21.1846, 82.6294],
+            "Raigarh": [18.492, 73.244],
+            "Raipur": [20.8268, 82.2524],
+            "Raj Nandgaon": [20.9712, 80.7966],
+            "Surguja": [23.3658, 83.2808],
+            "Dadra And Nagar Haveli": [20.2062, 73.0757],
+            "Daman": [20.4198, 72.8484],
+            "Junagadh": [21.1896, 70.6108],
+            "Delhi": [28.6465, 77.0853],
+            "North Goa": [15.5327, 73.9833],
+            "South Goa": [15.1926, 74.0512],
+            "Ahmadabad": [22.759, 72.2353],
+            "Amreli": [21.4262, 71.2486],
+            "Anand": [22.4669, 72.7942],
+            "Banas Kantha": [24.2657, 72.1514],
+            "Bharuch": [21.8336, 73.0067],
+            "Bhavnagar": [21.6721, 71.8985],
+            "Dahod": [22.9561, 74.0279],
+            "Gandhinagar": [23.2113, 72.6909],
+            "Jamnagar": [22.3273, 69.8069],
+            "Kachchh": [23.7043, 69.9568],
+            "Kheda": [22.8939, 73.0486],
+            "Mahesana": [23.5658, 72.4188],
+            "Narmada": [21.6884, 73.6494],
+            "Navsari": [20.8255, 73.1151],
+            "Panch Mahals": [22.872, 73.6456],
+            "Patan": [23.7683, 71.7903],
+            "Porbandar": [21.5874, 69.7827],
+            "Rajkot": [22.3442, 70.7857],
+            "Sabar Kantha": [23.7771, 73.1954],
+            "Surat": [21.1903, 73.4571],
+            "Surendranagar": [22.8235, 71.5789],
+            "The Dangs": [20.7872, 73.7122],
+            "Vadodara": [22.315, 73.584],
+            "Valsad": [20.4328, 73.1192],
+            "Ambala": [30.3818, 76.9216],
+            "Bhiwani": [28.7362, 75.9613],
+            "Faridabad": [28.1815, 77.304],
+            "Fatehabad": [29.5387, 75.5817],
+            "Gurgaon": [28.0994, 76.9829],
+            "Hisar": [29.2432, 75.7812],
+            "Jhajjar": [28.5985, 76.6151],
+            "Jind": [29.4548, 76.3352],
+            "Kaithal": [29.8606, 76.4551],
+            "Karnal": [29.7206, 76.8465],
+            "Kurukshetra": [30.0574, 76.8428],
+            "Mahendragarh": [28.1397, 76.1387],
+            "Panchkula": [30.7275, 76.9625],
+            "Panipat": [29.3318, 76.8894],
+            "Rewari": [28.2022, 76.5769],
+            "Rohtak": [28.8973, 76.551],
+            "Sirsa": [29.6097, 74.8788],
+            "Sonepat": [29.0562, 76.8435],
+            "Yamuna Nagar": [30.2562, 77.3268],
+            "Chamba": [32.6953, 76.327],
+            "Hamirpur": [25.7864, 79.8483],
+            "Kangra": [32.0805, 76.3215],
+            "Kinnaur": [31.5987, 78.3659],
+            "Kullu": [31.882, 77.3879],
+            "Lahul And Spiti": [32.5034, 77.5047],
+            "Mandi": [31.6546, 76.9911],
+            "Shimla": [31.2438, 77.6384],
+            "Sirmaur": [30.7055, 77.4085],
+            "Solan": [31.061, 76.9137],
+            "Una": [31.585, 76.1934],
+            "Anantnag (Kashmir South)": [33.8715, 75.2184],
+            "Bagdam": [33.9195, 74.7688],
+            "Baramula (Kashmir North)": [34.3617, 74.6834],
+            "Doda": [33.5379, 75.9895],
+            "Jammu": [32.7287, 74.8736],
+            "Kargil": [33.776, 76.5011],
+            "Kathua": [32.5723, 75.5614],
+            "Kupwara (Muzaffarabad)": [34.5525, 74.2056],
+            "Ladakh (Leh)": [33.9221, 77.9465],
+            "Pulwama": [33.8471, 74.9831],
+            "Punch": [33.743, 74.3055],
+            "Rajauri": [33.2624, 74.4079],
+            "Srinagar": [34.2516, 75.1323],
+            "Udhampur": [33.067, 75.237],
+            "Bokaro": [23.6933, 86.0216],
+            "Chatra": [24.1034, 84.8913],
+            "Deoghar": [24.3314, 86.7589],
+            "Dhanbad": [23.8433, 86.4641],
+            "Dumka": [24.3106, 87.288],
+            "Garhwa": [24.0503, 83.6929],
+            "Giridih": [24.3328, 86.1165],
+            "Godda": [24.8639, 87.2808],
+            "Gumla": [23.1572, 84.5194],
+            "Hazaribag": [23.9822, 85.4696],
+            "Jamtara": [23.981, 86.8797],
+            "Koderma": [24.5542, 85.6734],
+            "Latehar": [23.6856, 84.4623],
+            "Lohardaga": [23.4769, 84.6635],
+            "Pakur": [24.5312, 87.6489],
+            "Palamu": [24.1898, 84.1933],
+            "Pashchim Singhbhum": [22.4246, 85.5116],
+            "Purba Singhbhum": [22.6106, 86.4752],
+            "Ranchi": [23.141, 85.3792],
+            "Sahibganj": [25.031, 87.7113],
+            "Saraikela Kharsawan": [22.8155, 85.8746],
+            "Simdega": [22.5854, 84.5371],
+            "Bagalkot": [16.288, 75.6649],
+            "Bangalore Rural": [12.8641, 77.5105],
+            "Bangalore Urban": [12.9358, 77.5739],
+            "Belgaum": [16.1555, 74.7793],
+            "Bellary": [15.1929, 76.4149],
+            "Bidar": [18.018, 77.172],
+            "Bijapur": [16.8121, 75.9026],
+            "Chamrajnagar": [11.9393, 77.0824],
+            "Chikmagalur": [13.4022, 75.7203],
+            "Chitradurga": [14.2996, 76.5214],
+            "Dakshin Kannad": [12.8169, 75.2222],
+            "Davanagere": [14.3107, 75.9654],
+            "Dharwad": [15.367, 75.1444],
+            "Gadag": [15.4119, 75.6608],
+            "Gulbarga": [16.9781, 76.8773],
+            "Hassan": [13.0239, 76.0914],
+            "Haveri": [14.7137, 75.4197],
+            "Kodagu": [12.3754, 75.7743],
+            "Kolar": [13.3516, 77.9664],
+            "Koppal": [15.5701, 76.2915],
+            "Mandya": [12.6289, 76.8252],
+            "Mysore": [12.1901, 76.5163],
+            "Raichur": [16.0498, 76.9133],
+            "Shimoga": [14.0528, 75.1823],
+            "Tumkur": [13.5379, 76.9261],
+            "Udupi": [13.4805, 74.892],
+            "Uttar Kannand": [14.7227, 74.5813],
+            "Alappuzha": [9.4949, 76.4751],
+            "Ernakulam": [9.9816, 76.2999],
+            "Idukki": [9.8043, 77.0071],
+            "Kannur": [11.982, 75.5519],
+            "Kasaragod": [12.4203, 75.1485],
+            "Kollam": [8.9583, 76.8597],
+            "Kottayam": [9.6217, 76.6698],
+            "Kozhikode": [11.4615, 75.8336],
+            "Malappuram": [11.0992, 76.1829],
+            "Palakkad": [10.7791, 76.4582],
+            "Pattanamtitta": [9.2718, 76.8652],
+            "Thiruvananthapuram": [8.5749, 76.9709],
+            "Thrissur": [10.472, 76.4244],
+            "Wayanad": [11.7067, 76.1039],
+            "Kavaratti": [9.9861, 72.9014],
+            "Anuppur": [23.1503, 81.8605],
+            "Ashoknagar": [24.6234, 77.87],
+            "Balaghat": [21.8589, 80.2731],
+            "Barwani": [21.7544, 75.0331],
+            "Betul": [21.8819, 77.7989],
+            "Bhind": [26.3552, 78.6689],
+            "Bhopal": [23.4966, 77.4057],
+            "Burhanpur": [21.3377, 76.3701],
+            "Chhatarpur": [24.7657, 79.7028],
+            "Chhindwara": [22.141, 78.8234],
+            "Damoh": [23.8, 79.4999],
+            "Datia": [25.9235, 78.5479],
+            "Dewas": [22.8102, 76.5115],
+            "Dhar": [22.5808, 75.0943],
+            "Dindori": [22.8068, 81.1024],
+            "East Nimar": [21.9808, 76.6209],
+            "Guna": [24.5045, 77.2655],
+            "Gwalior": [26.0344, 78.1527],
+            "Harda": [22.2479, 77.1394],
+            "Hoshangabad": [22.6043, 77.9475],
+            "Indore": [22.7145, 75.8336],
+            "Jabalpur": [23.151, 79.9611],
+            "Jhabua": [22.5833, 74.5245],
+            "Katni": [23.7205, 80.372],
+            "Mandla": [22.6896, 80.4727],
+            "Mandsaur": [24.2647, 75.4026],
+            "Morena": [26.3908, 77.8222],
+            "Narsinghpur": [22.9367, 79.0353],
+            "Neemuch": [24.6498, 75.1607],
+            "Panna": [24.4523, 80.2002],
+            "Raisen": [23.2711, 78.0833],
+            "Rajgarh": [23.8724, 76.7122],
+            "Ratlam": [23.5056, 75.1039],
+            "Rewa": [24.7598, 81.6688],
+            "Sagar": [23.8132, 78.6994],
+            "Satna": [24.5818, 80.8653],
+            "Sehore": [23.1264, 77.2365],
+            "Seoni": [22.2738, 79.7389],
+            "Shahdol": [23.4655, 81.4843],
+            "Shajapur": [23.7203, 76.3663],
+            "Sheopur": [25.7502, 77.0695],
+            "Shivpuri": [25.3808, 77.7338],
+            "Sidhi": [24.2453, 82.0531],
+            "Tikamgarh": [25.002, 78.8847],
+            "Ujjain": [23.2981, 75.6918],
+            "Umaria": [23.6461, 80.892],
+            "Vidisha": [23.851, 77.7742],
+            "West Nimar": [21.9633, 75.7237],
+            "Ahmednagar": [19.1595, 74.5874],
+            "Akola": [20.7636, 77.1399],
+            "Amravati": [21.1561, 77.5356],
+            "Bhandara": [21.1211, 80.0585],
+            "Bid": [18.9747, 75.7763],
+            "Buldana": [20.565, 76.3743],
+            "Chandrapur": [20.0946, 79.3926],
+            "Dhule": [21.1337, 74.5323],
+            "Garhchiroli": [19.7529, 80.3148],
+            "Gondiya": [21.1433, 80.1737],
+            "Greater Bombay": [19.1031, 72.9501],
+            "Hingoli": [19.5422, 77.0829],
+            "Jalgaon": [20.844, 75.5814],
+            "Jalna": [19.9626, 76.0616],
+            "Kolhapur": [16.4591, 74.2025],
+            "Latur": [18.3518, 76.7491],
+            "Nagpur": [21.1521, 78.9507],
+            "Nanded": [19.0955, 77.6499],
+            "Nandurbar": [21.5121, 74.1818],
+            "Nashik": [20.2263, 74.1003],
+            "Osmanabad": [18.1694, 76.0381],
+            "Parbhani": [19.3081, 76.6637],
+            "Pune": [18.6432, 74.25],
+            "Ratnagiri": [17.2803, 73.4516],
+            "Sangli": [17.1705, 74.6919],
+            "Satara": [17.6363, 74.2273],
+            "Sindhudurg": [16.1329, 73.7638],
+            "Solapur": [17.8335, 75.5214],
+            "Thane": [19.6449, 73.2284],
+            "Wardha": [20.8254, 78.6351],
+            "Washim": [20.304, 77.1465],
+            "Yavatmal": [20.064, 78.2142],
+            "Bishnupur": [24.5163, 93.8019],
+            "Chandel": [24.2418, 94.0759],
+            "Churachandpur": [24.3297, 93.428],
+            "East Imphal": [24.8096, 93.611],
+            "Senapati": [25.1089, 94.0802],
+            "Tamenglong": [24.9816, 93.5526],
+            "Thoubal": [24.4869, 93.9982],
+            "Ukhrul": [25.0936, 94.4366],
+            "West Imphal": [24.8186, 93.8821],
+            "East Garo Hills": [25.7152, 90.5701],
+            "East Khasi Hills": [25.4045, 91.7559],
+            "Jaintia Hills": [25.3927, 92.3941],
+            "Ri-Bhoi": [25.88, 91.8218],
+            "South Garo Hills": [25.3493, 90.6186],
+            "West Garo Hills": [25.577, 90.1314],
+            "West Khasi Hills": [25.5125, 91.2894],
+            "Aizawl": [23.8623, 92.9175],
+            "Champhai": [23.5456, 93.2257],
+            "Kolasib": [24.2385, 92.7166],
+            "Lawngtlai": [22.3695, 92.7368],
+            "Lunglei": [22.9531, 92.7647],
+            "Mamit": [23.7559, 92.468],
+            "Saiha": [22.3784, 93.0181],
+            "Serchhip": [23.3123, 92.9375],
+            "Dimapur": [25.8051, 93.7721],
+            "Kohima": [25.6157, 93.8104],
+            "Mokokchung": [26.4831, 94.5261],
+            "Mon": [26.666, 95.0139],
+            "Phek": [25.6513, 94.5476],
+            "Tuensang": [26.1973, 94.8754],
+            "Wokha": [26.2447, 94.173],
+            "Zunheboto": [26.0293, 94.4666],
+            "Angul": [21.0974, 84.8243],
+            "Baleshwar": [21.5142, 86.9174],
+            "Baragarh": [21.2309, 83.2695],
+            "Bhadrak": [20.978, 86.6442],
+            "Bolangir": [20.6042, 83.1749],
+            "Boudh": [20.639, 84.1774],
+            "Cuttack": [20.3623, 85.5618],
+            "Deogarh": [21.4335, 84.8411],
+            "Dhenkanal": [20.8292, 85.5685],
+            "Gajapati": [19.1863, 84.1145],
+            "Ganjam": [19.625, 84.6518],
+            "Jagatsinghpur": [20.1764, 86.3642],
+            "Jajpur": [20.8673, 86.15],
+            "Jharsuguda": [21.7985, 83.9031],
+            "Kalahandi": [19.813, 83.1522],
+            "Kandhamal": [20.1265, 84.0345],
+            "Kendrapara": [20.5428, 86.6701],
+            "Keonjhar": [21.5834, 85.7754],
+            "Khordha": [20.0472, 85.5033],
+            "Koraput": [18.731, 82.7464],
+            "Malkangiri": [18.2677, 81.912],
+            "Mayurbhanj": [21.9118, 86.4189],
+            "Nabarangpur": [19.6216, 82.343],
+            "Nayagarh": [20.2324, 84.9648],
+            "Nuapada": [20.5363, 82.5897],
+            "Puri": [19.825, 85.7296],
+            "Rayagada": [19.4339, 83.4479],
+            "Sambalpur": [21.5523, 84.2795],
+            "Sonepur": [20.8485, 83.8595],
+            "Sundargarh": [22.0567, 84.4518],
+            "Karaikal": [10.9001, 79.7787],
+            "Mahe": [12.0485, 75.3118],
+            "Puducherry": [11.9138, 79.74],
+            "Yanam": [16.7207, 82.2387],
+            "Amritsar": [31.5681, 74.9462],
+            "Bathinda": [30.1796, 74.9945],
+            "Faridkot": [30.599, 74.7519],
+            "Fatehgarh Sahib": [30.665, 76.3229],
+            "Firozpur": [30.5546, 74.4936],
+            "Gurdaspur": [32.0856, 75.4046],
+            "Hoshiarpur": [31.6087, 75.8994],
+            "Jalandhar": [31.2943, 75.5023],
+            "Kapurthala": [31.386, 75.4169],
+            "Ludhiana": [30.7922, 75.8401],
+            "Mansa": [29.8791, 75.4618],
+            "Moga": [30.7932, 75.151],
+            "Muktsar": [30.2856, 74.5264],
+            "Nawan Shehar": [31.1295, 76.1391],
+            "Patiala": [30.2411, 76.4515],
+            "Rupnagar": [31.0071, 76.5621],
+            "Sangrur": [30.2108, 75.7189],
+            "Ajmer": [26.3162, 74.6286],
+            "Alwar": [27.6438, 76.6597],
+            "Banswara": [23.4949, 74.3758],
+            "Baran": [24.923, 76.816],
+            "Barmer": [25.5754, 71.4723],
+            "Bharatpur": [27.2672, 77.3141],
+            "Bhilwara": [25.4915, 74.7365],
+            "Bikaner": [28.1186, 73.0419],
+            "Bundi": [25.4433, 75.7912],
+            "Chittaurgarh": [24.3772, 74.9629],
+            "Churu": [28.2068, 74.6494],
+            "Dausa": [26.81, 76.6117],
+            "Dhaulpur": [26.6598, 77.7412],
+            "Dungarpur": [23.6787, 73.8732],
+            "Ganganagar": [29.4531, 73.4818],
+            "Hanumangarh": [29.367, 74.7398],
+            "Jaipur": [27.156, 75.5994],
+            "Jaisalmer": [26.9479, 70.9127],
+            "Jalor": [25.2059, 72.1478],
+            "Jhalawar": [24.3186, 76.2004],
+            "Jhunjhunun": [28.0838, 75.5567],
+            "Jodhpur": [26.7336, 72.8303],
+            "Karauli": [26.5013, 76.9164],
+            "Kota": [25.1958, 76.0995],
+            "Nagaur": [27.0594, 74.238],
+            "Pali": [25.6103, 73.5894],
+            "Rajsamand": [25.2682, 73.8982],
+            "Sawai Madhopur": [26.2003, 76.4709],
+            "Sikar": [27.6652, 75.3826],
+            "Sirohi": [24.8064, 72.7087],
+            "Tonk": [26.1244, 75.716],
+            "Udaipur": [24.4577, 73.7961],
+            "East": [27.2801, 88.6795],
+            "North Sikkim": [27.7547, 88.4997],
+            "South Sikkim": [27.3049, 88.3964],
+            "West Sikkim": [27.3629, 88.1851],
+            "Ariyalur": [11.1377, 79.2102],
+            "Chennai": [13.0827, 80.2707],
+            "Coimbatore": [11.0168, 76.9558],
+            "Cuddalore": [11.5044, 79.3375],
+            "Dharmapuri": [12.3196, 78.0985],
+            "Dindigul": [10.4152, 77.7873],
+            "Erode": [11.2697, 77.3731],
+            "Kancheepuram": [12.6716, 79.9045],
+            "Kanniyakumari": [8.3238, 77.3329],
+            "Karur": [10.8089, 78.1538],
+            "Madurai": [9.9251, 77.9512],
+            "Nagapattinam": [10.846, 79.6886],
+            "Namakkal": [11.2909, 78.0718],
+            "Nilgiris": [11.4391, 76.6158],
+            "Perambalur": [11.2732, 78.8863],
+            "Pudukkottai": [10.2754, 78.8505],
+            "Ramanathapuram": [9.5063, 78.8637],
+            "Salem": [11.6331, 78.2341],
+            "Sivaganga": [9.9504, 78.5524],
+            "Thanjavur": [10.6454, 79.1598],
+            "Theni": [9.8569, 77.4329],
+            "Thiruvallur": [13.2353, 79.8101],
+            "Thiruvarur": [10.6374, 79.5396],
+            "Thoothukudi": [8.8355, 78.0115],
+            "Tiruchchirappalli": [10.8365, 78.5746],
+            "Tirunelveli Kattabo": [8.7705, 77.5478],
+            "Tiruvannamalai": [12.4137, 79.1816],
+            "Vellore": [12.721, 79.0865],
+            "Villupuram": [11.9631, 79.3103],
+            "Virudhunagar": [9.4808, 77.8621],
+            "Dhalai": [23.8421, 91.9598],
+            "North Tripura": [24.0956, 92.1195],
+            "South Tripura": [23.354, 91.6089],
+            "West Tripura": [23.7522, 91.4707],
+            "Agra": [27.024, 78.1301],
+            "Aligarh": [27.8793, 78.0402],
+            "Allahabad": [25.2825, 81.9282],
+            "Ambedkar Nagar": [26.4101, 82.6686],
+            "Auraiya": [26.6608, 79.3983],
+            "Azamgarh": [26.0463, 83.0792],
+            "Badaun": [28.073, 78.8825],
+            "Baghpat": [29.0417, 77.3001],
+            "Bahraich": [27.7367, 81.4143],
+            "Ballia": [25.878, 84.1496],
+            "Balrampur": [27.449, 82.3859],
+            "Banda": [25.4592, 80.5635],
+            "Bara Banki": [26.9438, 81.3852],
+            "Bareilly": [28.4595, 79.3677],
+            "Basti": [26.7822, 82.5912],
+            "Bijnor": [29.4157, 78.4523],
+            "Bulandshahr": [28.3971, 78.0306],
+            "Chandauli": [25.1253, 83.2753],
+            "Chitrakoot": [25.2202, 81.1182],
+            "Deoria": [26.4265, 83.8261],
+            "Etah": [27.6828, 78.7181],
+            "Etawah": [26.7494, 79.0372],
+            "Faizabad": [26.6251, 82.0686],
+            "Farrukhabad": [27.4423, 79.4256],
+            "Fatehpur": [25.8377, 80.7674],
+            "Firozabad": [27.1994, 78.3827],
+            "Gautam Buddha Nagar": [28.3842, 77.5234],
+            "Ghaziabad": [28.7418, 77.6966],
+            "Ghazipur": [25.6024, 83.5056],
+            "Gonda": [27.115, 82.052],
+            "Gorakhpur": [26.612, 83.3622],
+            "Hardoi": [27.3415, 80.248],
+            "Hathras": [27.5579, 78.1942],
+            "Jalaun": [26.1114, 79.4361],
+            "Jaunpur": [25.7975, 82.5971],
+            "Jhansi": [25.5331, 78.8535],
+            "Jyotiba Phule Nagar": [28.7943, 78.3736],
+            "Kannauj": [27.0034, 79.6605],
+            "Kanpur Dehat": [26.4443, 79.9804],
+            "Kanpur": [26.411, 80.337],
+            "Kaushambi": [25.5383, 81.5228],
+            "Kushinagar": [26.9256, 83.9665],
+            "Lakhimpur Kheri": [28.185, 80.6561],
+            "Lalitpur": [24.7031, 78.5756],
+            "Lucknow": [26.8353, 80.88],
+            "Maharajganj": [27.1861, 83.5193],
+            "Mahoba": [25.365, 79.7057],
+            "Mainpuri": [27.2059, 79.0555],
+            "Mathura": [27.6048, 77.6236],
+            "Mau": [26.0407, 83.4866],
+            "Meerut": [29.0049, 77.7854],
+            "Mirzapur": [24.9376, 82.6257],
+            "Moradabad": [28.8139, 78.6756],
+            "Muzaffarnagar": [29.4504, 77.6052],
+            "Pilibhit": [28.5072, 80.0052],
+            "Pratapgarh": [25.8771, 81.8733],
+            "Rae Bareli": [26.2119, 81.1387],
+            "Rampur": [28.7816, 79.115],
+            "Saharanpur": [29.9894, 77.5222],
+            "Sant Kabir Nagar": [26.7308, 83.0181],
+            "Sant Ravi Das Nagar": [25.3614, 82.4444],
+            "Shahjahanpur": [27.9701, 79.8406],
+            "Shravasti": [27.6326, 81.8173],
+            "Siddharth Nagar": [27.2101, 82.8621],
+            "Sitapur": [27.5081, 80.8509],
+            "Sonbhadra": [24.3901, 83.0301],
+            "Sultanpur": [26.3222, 82.1059],
+            "Unnao": [26.5775, 80.5419],
+            "Varanasi": [25.376, 82.9244],
+            "Almora": [29.7103, 79.5419],
+            "Bageshwar": [30.0057, 79.8019],
+            "Chamoli": [30.5063, 79.5533],
+            "Champawat": [29.2921, 80.0532],
+            "Dehra Dun": [30.4639, 77.9306],
+            "Haridwar": [29.8983, 78.0169],
+            "Naini Tal": [29.3015, 79.3999],
+            "Pauri Garhwal": [29.8865, 78.7011],
+            "Pithoragarh": [30.1259, 80.4144],
+            "Rudra Prayag": [30.5533, 79.1191],
+            "Tehri Garhwal": [30.4717, 78.4866],
+            "Udham Singh Nagar": [29.0505, 79.4369],
+            "Uttarkashi": [30.9731, 78.5628],
+            "Bankura": [23.1304, 87.1835],
+            "Barddhaman": [23.4054, 87.6035],
+            "Birbhum": [24.06, 87.5537],
+            "Dakshin Dinajpur": [25.3818, 88.5945],
+            "Darjiling": [26.8336, 88.4344],
+            "East Midnapore": [22.0596, 87.8088],
+            "Haora": [22.498, 88.1036],
+            "Hugli": [22.9095, 88.0037],
+            "Jalpaiguri": [26.6645, 89.1339],
+            "Kochbihar": [26.2552, 89.3029],
+            "Kolkata": [22.5623, 88.339],
+            "Maldah": [25.0972, 88.111],
+            "Murshidabad": [24.2863, 88.2759],
+            "Nadia": [23.4852, 88.4667],
+            "North 24 Parganas": [22.3999, 88.7137],
+            "Puruliya": [23.1994, 86.3602],
+            "South 24 Parganas": [22.0808, 88.418],
+            "Uttar Dinajpur": [25.8698, 88.1644],
+            "West Midnapore": [22.3548, 87.2218],
+            "Bengaluru Urban": [12.9358, 77.5739],
+            "Bengaluru Rural": [12.8641, 77.5105]
         };
 
         function mulberry32(seed) {
@@ -1024,6 +1674,16 @@
             const crimeTypeSelect = $("#crimeTypeSelect");
             const yFrom = $("#yearFromSelect");
             const yTo = $("#yearToSelect");
+
+            // Extract boundaries from real Python DATA array
+            if (DATA && DATA.length > 0) {
+                const datasetYears = Array.from(new Set(DATA.map(d => parseInt(d.Year)))).sort();
+                if (datasetYears.length > 0) YEARS = datasetYears;
+            }
+
+            // Update filter defaults to match valid dataset years
+            state.filters.yearFrom = YEARS[0];
+            state.filters.yearTo = YEARS[YEARS.length - 1];
 
             // states
             const states = Array.from(new Set(DATA.map(d => d.State))).sort();
@@ -1094,8 +1754,7 @@
 
             // years (ensure parsed as int for safety from JSON payload)
             rows = rows.filter(r => parseInt(r.Year) >= parseInt(f.yearFrom) && parseInt(r.Year) <= parseInt(f.yearTo));
-
-            // state/district
+            // state / district 
             if (f.state !== "__all__") rows = rows.filter(r => r.State === f.state);
             if (f.district !== "__all__") rows = rows.filter(r => r.District === f.district);
 
@@ -1150,9 +1809,8 @@
             const f = state.filters;
             const y2 = parseInt(f.yearTo);
             const y1 = y2 - 1;
-            if (y1 < parseInt(f.yearFrom)) return { pct: NaN, delta: 0, a: 0, b: 0, y1, y2 };
-
-            const a = sumTotal(rows.filter(r => parseInt(r.Year) === y1), crimeType);
+            if (y1 < parseInt(f.yearFrom)) return { pct: NaN, delta: 0, a: 0, b: 0, y1, y2 }; const
+                a = sumTotal(rows.filter(r => parseInt(r.Year) === y1), crimeType);
             const b = sumTotal(rows.filter(r => parseInt(r.Year) === y2), crimeType);
             const pct = a === 0 ? NaN : ((b - a) / a) * 100;
             return { pct, delta: b - a, a, b, y1, y2 };
@@ -1314,17 +1972,22 @@
             const labels = top.map(d => d.type).concat(rest > 0 ? ["Others"] : []);
             const values = top.map(d => d.value).concat(rest > 0 ? [rest] : []);
             const colors = [
-                "rgba(220,38,38,.75)",  // red-600
-                "rgba(234,88,12,.70)",  // orange-600
+                "rgba(220,38,38,.75)", // red-600
+                "rgba(234,88,12,.70)", // orange-600
                 "rgba(245,158,11,.68)", // amber-500
-                "rgba(185,28,28,.62)",  // red-700
-                "rgba(124,45,18,.62)",  // orange-900
+                "rgba(185,28,28,.62)", // red-700
+                "rgba(124,45,18,.62)", // orange-900
                 "rgba(254,202,202,.62)",// red-200
                 "rgba(148,163,184,.45)" // slate
             ];
             pieChart = new Chart(ctx, {
                 type: "doughnut",
-                data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: "rgba(255,255,255,.10)", borderWidth: 1 }] },
+                data: {
+                    labels, datasets: [{
+                        data: values, backgroundColor: colors, borderColor:
+                            "rgba(255,255,255,.10)", borderWidth: 1
+                    }]
+                },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -1434,10 +2097,10 @@
 
                     circle.bindTooltip(
                         `<div style="min-width:160px">
-                 <div style="font-weight:700; margin-bottom:2px">${st}</div>
-                 <div style="opacity:.85; font-size:12px">Total: <b>${formatInt(val)}</b></div>
-                 <div style="opacity:.75; font-size:11px; margin-top:4px; color:#a5b4fc">Click to drill down</div>
-               </div>`,
+                    <div style="font-weight:700; margin-bottom:2px">${st}</div>
+                    <div style="opacity:.85; font-size:12px">Total: <b>${formatInt(val)}</b></div>
+                    <div style="opacity:.75; font-size:11px; margin-top:4px; color:#a5b4fc">Click to drill down</div>
+                </div>`,
                         { sticky: true, direction: "top" }
                     );
 
@@ -1486,16 +2149,14 @@
                         // Create a stable hash from string to keep position constant across renders
                         let hash = 0;
                         for (let i = 0; i < dist.length; i++) hash = dist.charCodeAt(i) + ((hash << 5) - hash);
-                        const norm = (hash & 0xFFFFFF) / 0xFFFFFF; // 0..1
+                        const norm = (hash & 0xFFFFFF) / 0xFFFFFF; // 0..1 
                         const angle = norm * 2 * Math.PI;
-                        const distOffset = 0.3 + (Math.abs(hash % 100) / 100) * 1.2; // 0.3 to 1.5 degrees
-
+                        const distOffset = 0.3 + (Math.abs(hash % 100) / 100) * 1.2; // 0.3 to 1.5 degrees 
                         lat = center[0] + distOffset * Math.cos(angle);
                         lng = center[1] + distOffset * Math.sin(angle);
                     }
 
                     const radius = 15000 + (max ? (val / max) * 40000 : 10000); // Smaller bubbles for districts
-
                     const isActive = (state.filters.district === dist);
 
                     const circle = L.circle([lat, lng], {
@@ -1506,12 +2167,11 @@
                         fillOpacity: 0.9
                     }).addTo(mapLayerGroup);
 
-                    circle.bindTooltip(
-                        `<div style="min-width:140px">
-                  <div style="font-weight:700; margin-bottom:2px">${dist}</div>
-                  <div style="opacity:.85; font-size:12px">Total: <b>${formatInt(val)}</b></div>
-                  <div style="opacity:.65; font-size:10px; margin-top:2px">${state.filters.state}</div>
-                </div>`,
+                    circle.bindTooltip(`<div style="min-width:140px">
+                    <div style="font-weight:700; margin-bottom:2px">${dist}</div>
+                    <div style="opacity:.85; font-size:12px">Total: <b>${formatInt(val)}</b></div>
+                    <div style="opacity:.65; font-size:10px; margin-top:2px">${state.filters.state}</div>
+                    </div>`,
                         { sticky: true, direction: "top" }
                     );
 
@@ -1533,7 +2193,10 @@
             const view = rows.map(r => {
                 const type = ct === "__all__" ? "Total (All)" : ct;
                 const val = ct === "__all__" ? r.Total : (r[ct] ?? 0);
-                return { State: r.State, District: r.District, Year: r.Year, Total: r.Total, CrimeType: type, CrimeValue: val };
+                return {
+                    State: r.State, District: r.District, Year: r.Year, Total: r.Total, CrimeType: type,
+                    CrimeValue: val
+                };
             });
 
             const q = state.tableSearch.trim().toLowerCase();
@@ -1577,24 +2240,23 @@
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-white/5 transition-colors";
                 tr.innerHTML = `
-          <td class="px-4 py-3 whitespace-nowrap">${r.State}</td>
-          <td class="px-4 py-3 whitespace-nowrap">${r.District}</td>
-          <td class="px-4 py-3">${r.Year}</td>
-          <td class="px-4 py-3">${formatInt(r.Total)}</td>
-          <td class="px-4 py-3 whitespace-nowrap">${r.CrimeType}</td>
-          <td class="px-4 py-3 text-right font-medium">${formatInt(r.CrimeValue)}</td>
-        `;
+                    <td class="px-4 py-3 whitespace-nowrap">${r.State}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${r.District}</td>
+                    <td class="px-4 py-3">${r.Year}</td>
+                    <td class="px-4 py-3">${formatInt(r.Total)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">${r.CrimeType}</td>
+                    <td class="px-4 py-3 text-right font-medium">${formatInt(r.CrimeValue)}</td>
+                    `;
                 tbody.appendChild(tr);
             }
 
-            setTxt("#tableMeta", `${formatInt(totalCount)} rows (showing ${start + 1}-${Math.min(start + state.pageSize, totalCount)})`);
+            setTxt("#tableMeta", `${formatInt(totalCount)} rows (showing ${start + 1}-${Math.min(start +
+                state.pageSize, totalCount)})`);
             setTxt("#pageInfo", `Page ${state.page} / ${pages}`);
 
             const btnPrev = $("#prevPageBtn");
-            if (btnPrev) btnPrev.disabled = state.page <= 1;
-
-            const btnNext = $("#nextPageBtn");
-            if (btnNext) btnNext.disabled = state.page >= pages;
+            if (btnPrev) btnPrev.disabled = state.page <= 1; const btnNext = $("#nextPageBtn"); if (btnNext)
+                btnNext.disabled = state.page >= pages;
 
             // sort indicators
             const keys = ["State", "District", "Year", "Total", "CrimeType", "CrimeValue"];
@@ -1645,44 +2307,83 @@
             const rows = applyCurrentFilters();
             const f = state.filters;
             const ct = f.crimeType === "__all__" ? "All crimes (Total)" : f.crimeType;
-            const title = `CrimeScope Export — ${ct} — ${f.state === "__all__" ? "All states" : f.state}${f.district === "__all__" ? "" : (" / " + f.district)} — ${f.yearFrom}-${f.yearTo}`;
+            const title = `CrimeScope Export — ${ct} — ${f.state === "__all__" ? "All states" :
+                f.state}${f.district === "__all__" ? "" : (" / " + f.district)} — ${f.yearFrom}-${f.yearTo}`;
             const total = sumTotal(rows, f.crimeType);
             const yoy = yoyForSelection(rows, f.crimeType);
             const dom = dominantCrime(rows);
             const series = seriesByYear(rows, f.crimeType);
 
             const pre = `
-${title}
+                        ${title}
 
-Total crimes: ${formatInt(total)}
-YoY: ${isFinite(yoy.pct) ? formatPct(yoy.pct) : "—"}  (${yoy.y1}→${yoy.y2})
-Dominant crime: ${dom.type} (${formatInt(dom.value)})
+                        Total crimes: ${formatInt(total)}
+                        YoY: ${isFinite(yoy.pct) ? formatPct(yoy.pct) : "—"} (${yoy.y1}→${yoy.y2})
+                        Dominant crime: ${dom.type} (${formatInt(dom.value)})
 
-Trend:
-${series.map(s => `${s.year}: ${formatInt(s.value)}`).join("\n")}
+                        Trend:
+                        ${series.map(s => `${s.year}: ${formatInt(s.value)}`).join("\n")}
 
-Notes:
-- This is a lightweight PDF-like export as a printable document.
-- In production, replace with jsPDF/html2pdf for richer output.
-`;
+                        Notes:
+                        - This is a lightweight PDF-like export as a printable document.
+                        - In production, replace with jsPDF/html2pdf for richer output.
+                        `;
             const w = window.open("", "_blank");
             w.document.write(`
-        <!DOCTYPE html><html><head><meta charset="utf-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <title>CrimeScope Export</title>
-        <style>
-          body{font-family: Inter, system-ui, sans-serif; padding:24px; color:#0b1026;}
-          h1{font-size:18px; margin:0 0 10px;}
-          pre{white-space:pre-wrap; font-size:13px; line-height:1.45; background:#f6f7fb; border:1px solid #e6e8f0; padding:14px; border-radius:12px;}
-          .muted{color:#4b5563; font-size:12px; margin-top:10px;}
-          @media print{ body{padding:0} pre{border:none} }
-        </style></head><body>
-          <h1>CrimeScope — Export</h1>
-          <pre>${pre.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}</pre>
-          <div class="muted">Generated at ${new Date().toLocaleString()}</div>
-          <script>setTimeout(()=>window.print(), 250);<\/script>
-        </body></html>
-      `);
+                        <!DOCTYPE html>
+                        <html>
+
+                        <head>
+                            <meta charset="utf-8" />
+                            <meta name="viewport" content="width=device-width, initial-scale=1" />
+                            <title>CrimeScope Export</title>
+                            <style>
+                                body {
+                                    font-family: Inter, system-ui, sans-serif;
+                                    padding: 24px;
+                                    color: #0b1026;
+                                }
+
+                                h1 {
+                                    font-size: 18px;
+                                    margin: 0 0 10px;
+                                }
+
+                                pre {
+                                    white-space: pre-wrap;
+                                    font-size: 13px;
+                                    line-height: 1.45;
+                                    background: #f6f7fb;
+                                    border: 1px solid #e6e8f0;
+                                    padding: 14px;
+                                    border-radius: 12px;
+                                }
+
+                                .muted {
+                                    color: #4b5563;
+                                    font-size: 12px;
+                                    margin-top: 10px;
+                                }
+
+                                @media print {
+                                    body {
+                                        padding: 0
+                                    }
+
+                                    pre {
+                                        border: none
+                                    }
+                                }
+                            </style>
+                        </head>
+
+                        <body>
+                            <h1>CrimeScope — Export</h1>
+                            <pre>${pre.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")}</pre>
+                            <div class="muted">Generated at ${new Date().toLocaleString()}</div>
+                            <script>setTimeout(() => window.print(), 250); <\/script>
+                                </body></html>
+                                    `);
             w.document.close();
         }
 
@@ -1721,8 +2422,8 @@ Notes:
                 if (isFinite(yoy.pct)) {
                     const up = yoy.pct >= 0;
                     arrow.innerHTML = up
-                        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 19V5m0 0l-6 6m6-6l6 6" stroke="rgba(255,255,255,.92)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-                        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14m0 0l-6-6m6 6l6-6" stroke="rgba(255,255,255,.92)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+                        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 19V5m0 0l-6 6m6-6l6 6" stroke="rgba(255,255,255,.92)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>`
+                        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14m0 0l-6-6m6 6l6-6" stroke="rgba(255,255,255,.92)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
                     arrow.className = "h-9 w-9 rounded-xl flex items-center justify-center border " + (up ? "bg-emerald-500/15 border-emerald-200/15" : "bg-rose-500/15 border-rose-200/15");
                 } else {
                     arrow.textContent = "—";
@@ -1740,7 +2441,7 @@ Notes:
             if (kpiYoy) {
                 if (isFinite(yoy.pct)) {
                     const up = yoy.pct >= 0;
-                    kpiYoy.textContent = `${up ? "▲" : "▼"} ${formatPct(yoy.pct)}`;
+                    kpiYoy.textContent = `${up ? "▲" : "▼"} ${formatPct(yoy.pct)} `;
                     kpiYoy.style.borderColor = up ? "rgba(34,197,94,.35)" : "rgba(239,68,68,.35)";
                     kpiYoy.style.background = up ? "rgba(34,197,94,.12)" : "rgba(239,68,68,.12)";
                 } else {
@@ -1757,7 +2458,7 @@ Notes:
             if (rd) {
                 if (isFinite(yoy.pct)) {
                     const up = yoy.pct >= 0;
-                    rd.textContent = `${up ? "▲" : "▼"} ${formatPct(yoy.pct)}`;
+                    rd.textContent = `${up ? "▲" : "▼"} ${formatPct(yoy.pct)} `;
                     rd.style.borderColor = up ? "rgba(34,197,94,.35)" : "rgba(239,68,68,.35)";
                     rd.style.background = up ? "rgba(34,197,94,.12)" : "rgba(239,68,68,.12)";
                 } else {
@@ -1778,7 +2479,7 @@ Notes:
             parts.push(ct === "__all__" ? "All crimes (Total)" : ct);
             parts.push(f.state === "__all__" ? "All states" : f.state);
             if (f.district !== "__all__") parts.push(f.district);
-            parts.push(`${f.yearFrom}–${f.yearTo}`);
+            parts.push(`${f.yearFrom}–${f.yearTo} `);
             setTxt("#activeFilterText", parts.join(" • "));
 
             // Charts
@@ -2028,7 +2729,8 @@ Notes:
                 // Fetch ML Prediction from Python backend
                 try {
                     const s = state.filters.state === "__all__" ? "all" : state.filters.state;
-                    const pred = await window.ApiClient.getPrediction(s, state.filters.yearTo + 1);
+                    const inputYear = parseInt($("#predictInputYear")?.value || (state.filters.yearTo + 1));
+                    const pred = await window.ApiClient.getPrediction(s, inputYear);
                     if (pred && $("#kpiPrediction")) {
                         $("#kpiPrediction").textContent = formatInt(pred.predicted_crimes);
                         if ($("#predictModel")) $("#predictModel").textContent = pred.model_used;
@@ -2079,7 +2781,7 @@ Notes:
                 const th = e.currentTarget;
                 // Reset table sorting header indicators
                 $$("thead th span.muted2").forEach(el => el.textContent = "");
-                const activeTh = $(`thead th[data-sort="${state.sort.key}"] span.muted2`);
+                const activeTh = $(`thead th[data - sort= "${state.sort.key}"]span.muted2`);
                 if (activeTh) activeTh.textContent = state.sort.dir === "asc" ? " ▲" : " ▼";
 
                 // If a prediction update exists, it handles the Prediction KPI async
@@ -2137,9 +2839,32 @@ Notes:
 
             // Prediction Toggle Logic
             bind("#predictionToggle", "change", () => {
+                const checked = $("#predictionToggle").checked;
+                if ($("#predictInputYear")) $("#predictInputYear").disabled = !checked;
                 updateYearSliderRange();
                 syncFiltersFromUI();
                 render();
+            });
+
+            // Prediction Year Input Event
+            bind("#predictInputYear", "change", async (e) => {
+                const checked = $("#predictionToggle")?.checked;
+                if (!checked) return;
+
+                try {
+                    const s = state.filters.state === "__all__" ? "all" : state.filters.state;
+                    const val = parseInt(e.target.value);
+                    if (val && val >= 2024) {
+                        const pred = await window.ApiClient.getPrediction(s, val);
+                        if (pred && $("#kpiPrediction")) {
+                            $("#kpiPrediction").textContent = formatInt(pred.predicted_crimes);
+                            if ($("#predictModel")) $("#predictModel").textContent = pred.model_used;
+                            if ($("#predictTargetYear")) $("#predictTargetYear").textContent = pred.target_year;
+                        }
+                    }
+                } catch (err) {
+                    console.error("Manual Prediction Fetch Error:", err);
+                }
             });
 
             // Mobile drawer
@@ -2226,7 +2951,7 @@ Notes:
                 const risingList = $("#risingRiskList");
                 if (risingList) {
                     risingList.innerHTML = topRising.map((item, i) => `
-            <div class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                                    < div class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5" >
                 <div class="flex items-center gap-3">
                     <span class="text-xs font-bold text-slate-500">#${i + 1}</span>
                     <div>
@@ -2235,8 +2960,8 @@ Notes:
                     </div>
                 </div>
                 <div class="text-xs font-bold text-rose-400">+${item.pct.toFixed(1)}%</div>
-            </div>
-        `).join("");
+            </div >
+                                    `).join("");
                 }
 
                 // 2. Safest Regions (Lowest Rate per 100k - approximated using our synthetic pop)
@@ -2254,7 +2979,7 @@ Notes:
                 const safeList = $("#safestZonesList");
                 if (safeList) {
                     safeList.innerHTML = topSafe.map((item, i) => `
-            <div class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                                    < div class="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5" >
                 <div class="flex items-center gap-3">
                     <span class="text-xs font-bold text-slate-500">#${i + 1}</span>
                     <div>
@@ -2263,12 +2988,12 @@ Notes:
                     </div>
                 </div>
                 <div class="text-xs font-bold text-emerald-400">${item.rate.toFixed(1)} <span class="text-[10px] text-slate-500 font-normal">/100k</span></div>
-            </div>
-        `).join("");
+            </div >
+                                    `).join("");
                 }
 
                 // 3. Category Hotspots (Top District for specific crimes)
-                const cats = ["Cyber Crime", "Rape", "Kidnapping"];
+                const cats = ["Cyber Crime", "Robbery", "Kidnapping"];
                 let catHtml = "";
 
                 cats.forEach(cType => {
@@ -2286,12 +3011,12 @@ Notes:
                     });
 
                     catHtml += `
-                <div class="bg-slate-950/50 p-3 rounded-lg border border-white/10">
+                                    < div class="bg-slate-950/50 p-3 rounded-lg border border-white/10" >
                     <div class="text-[10px] uppercase tracking-wider text-slate-400 mb-1">${cType} Pivot</div>
                     <div class="text-sm font-bold text-white truncate" title="${maxDist}">${maxDist}</div>
                     <div class="text-[10px] text-slate-500">${maxState}</div>
                     <div class="mt-2 text-xs font-mono text-orange-300">${formatInt(maxVal)} cases</div>
-                </div>
+                </div >
              `;
                 });
 
@@ -2307,7 +3032,7 @@ Notes:
         // -----------------------------
         // Init
         // -----------------------------
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function initDashboard() {
             try {
                 // Fetch the live analytic dataset from the Python Backend
                 const applyBtn = document.getElementById('applyFiltersBtn');
@@ -2322,28 +3047,43 @@ Notes:
                 if (applyBtn) applyBtn.innerHTML = 'Apply Filters';
 
                 chartDefaults();
+
+                // Set default YEARS boundaries BEFORE init filters based on the dataset if valid
+                if (DATA && DATA.length > 0) {
+                    const datasetYears = Array.from(new Set(DATA.map(d => parseInt(d.Year)))).sort();
+                    if (datasetYears.length > 0) YEARS = datasetYears;
+                }
+
                 initFilters();
                 initMap();
                 initUIEvents();
+
                 // Initialize slider state based on default toggle
                 if (typeof updateYearSliderRange === "function") updateYearSliderRange();
+
                 resetFilters(); // sets UI + initial render
 
-                // Fetch initial ML Prediction
                 try {
-                    const pred = await window.ApiClient.getPrediction("all", state.filters.yearTo + 1);
+                    // Fetch initial ML Prediction based on input value
+                    const initYear = parseInt($("#predictInputYear")?.value || (state.filters.yearTo + 1));
+                    const pred = await window.ApiClient.getPrediction("all", initYear);
                     if (pred && document.getElementById("kpiPrediction")) {
                         document.getElementById("kpiPrediction").textContent = formatInt(pred.predicted_crimes);
-                        if (document.getElementById("predictModel")) document.getElementById("predictModel").textContent = pred.model_used;
+                        if (document.getElementById("predictModel")) {
+                            document.getElementById("predictModel").textContent = pred.model_used;
+                        }
                         if (document.getElementById("predictTargetYear")) document.getElementById("predictTargetYear").textContent = pred.target_year;
                     }
                 } catch (e) { }
 
             } catch (e) {
                 console.error("Dashboard Init Error:", e);
-                alert("Backend Connection Error. Ensure Python API is running on :5000");
+                // Fallback gracefully without alerting repeatedly
             }
-        });
+        }
+
+        // Execute immediately since script is at the bottom of <body>
+        initDashboard();
     </script>
 </body>
 
